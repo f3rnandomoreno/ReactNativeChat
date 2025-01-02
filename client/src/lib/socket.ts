@@ -58,12 +58,8 @@ class SocketClient {
     this.socket.emit("stop_writing");
   }
 
-  sendLetter(letter: string) {
-    this.socket.emit("letter", letter);
-  }
-
-  sendBackspace() {
-    this.socket.emit("backspace");
+  updateMessage(message: string) {
+    this.socket.emit("update_message", message);
   }
 
   submitMessage() {

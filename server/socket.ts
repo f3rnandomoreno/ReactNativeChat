@@ -135,29 +135,13 @@ export function setupSocketServer(httpServer: HTTPServer) {
       }
     });
 
-    socket.on("letter", (letter: string) => {
+    socket.on("update_message", (message: string) => {
       if (!currentRoom) return;
 
       const room = rooms.get(currentRoom)!;
       if (room.activeWriter === socket.id) {
         room.lastActivity = Date.now();
-        room.currentMessage += letter;
-        const user = room.users.get(socket.id)!;
-        io.to(currentRoom).emit("message_update", {
-          message: room.currentMessage,
-          color: user.color,
-          writerName: user.name,
-        });
-      }
-    });
-
-    socket.on("backspace", () => {
-      if (!currentRoom) return;
-
-      const room = rooms.get(currentRoom)!;
-      if (room.activeWriter === socket.id && room.currentMessage.length > 0) {
-        room.lastActivity = Date.now();
-        room.currentMessage = room.currentMessage.slice(0, -1);
+        room.currentMessage = message;
         const user = room.users.get(socket.id)!;
         io.to(currentRoom).emit("message_update", {
           message: room.currentMessage,

@@ -10,7 +10,7 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const isWritingRef = useRef(false);
-  const previousLengthRef = useRef(0);
+  const previousValueRef = useRef("");
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -56,16 +56,9 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
       isWritingRef.current = true;
     }
 
-    // Detectar si es un borrado o nueva letra
-    if (newValue.length < previousLengthRef.current) {
-      socketClient.sendBackspace();
-    } else if (newValue.length > previousLengthRef.current) {
-      // Obtener la última letra añadida
-      const newLetter = newValue[newValue.length - 1];
-      socketClient.sendLetter(newLetter);
-    }
-
-    previousLengthRef.current = newValue.length;
+    // Actualizar el mensaje completo
+    socketClient.updateMessage(newValue);
+    previousValueRef.current = newValue;
     setValue(newValue);
   };
 
