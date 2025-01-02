@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { ColorPicker } from "@/components/chat/ColorPicker";
 import { ChatRoom } from "@/components/chat/ChatRoom";
+import { NameInput } from "@/components/chat/NameInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8);
@@ -12,12 +12,17 @@ function generateRoomId() {
 
 function App() {
   const [userColor, setUserColor] = useState<string>();
+  const [userName, setUserName] = useState<string>();
   const [, setLocation] = useLocation();
 
   const handleColorSelected = (color: string) => {
     setUserColor(color);
     setLocation(`/room/${generateRoomId()}`);
   };
+
+  if (!userName) {
+    return <NameInput onNameSubmit={setUserName} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
@@ -41,7 +46,11 @@ function App() {
         </Route>
         <Route path="/room/:roomId">
           {params => userColor ? (
-            <ChatRoom userColor={userColor} roomId={params.roomId} />
+            <ChatRoom 
+              userColor={userColor} 
+              roomId={params.roomId} 
+              userName={userName}
+            />
           ) : (
             <ColorPicker onColorSelected={setUserColor} />
           )}

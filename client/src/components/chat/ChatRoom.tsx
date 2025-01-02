@@ -10,9 +10,10 @@ import { AlertCircle, Clock } from "lucide-react";
 interface ChatRoomProps {
   userColor: string;
   roomId: string;
+  userName: string;
 }
 
-export function ChatRoom({ userColor, roomId }: ChatRoomProps) {
+export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messageColor, setMessageColor] = useState("");
   const [writerName, setWriterName] = useState("");
@@ -25,7 +26,6 @@ export function ChatRoom({ userColor, roomId }: ChatRoomProps) {
   const shareUrl = `${window.location.origin}/room/${roomId}`;
 
   useEffect(() => {
-    const userName = prompt("Ingresa tu nombre:") || "Anónimo";
     socketClient.joinRoom(roomId, userColor, userName);
 
     const handleRoomState = (state: { 
@@ -99,7 +99,7 @@ export function ChatRoom({ userColor, roomId }: ChatRoomProps) {
       socketClient.off("system_message", handleSystemMessage);
       clearInterval(timer);
     };
-  }, [userColor, roomId]);
+  }, [userColor, roomId, userName]);
 
   const isBlocked = currentWriter !== null && currentWriter.writerId !== socketClient.getSocketId();
 
