@@ -1,20 +1,25 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MessageInput } from "./MessageInput";
 import { socketClient } from "@/lib/socket";
 import type { WriterInfo, MessageUpdate } from "@/lib/types";
 
 interface ChatRoomProps {
   userColor: string;
+  roomId: string;
 }
 
-export function ChatRoom({ userColor }: ChatRoomProps) {
+export function ChatRoom({ userColor, roomId }: ChatRoomProps) {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messageColor, setMessageColor] = useState("");
   const [currentWriter, setCurrentWriter] = useState<WriterInfo | null>(null);
+  const [showCopied, setShowCopied] = useState(false);
+
+  const shareUrl = `${window.location.origin}/room/${roomId}`;
 
   useEffect(() => {
-    const roomId = "main"; // For simplicity, using a single room
     socketClient.joinRoom(roomId, userColor);
 
     const handleRoomState = (state: { currentMessage: string; activeWriter: string | null }) => {
@@ -52,13 +57,30 @@ export function ChatRoom({ userColor }: ChatRoomProps) {
       socketClient.off("messageUpdate", handleMessageUpdate);
       socketClient.off("messageCleared", handleMessageCleared);
     };
-  }, [userColor]);
+  }, [userColor, roomId]);
 
   const isBlocked = currentWriter !== null && currentWriter.writerId !== socketClient.getSocketId();
+
+  const copyShareLink = async () => {
+    await navigator.clipboard.writeText(shareUrl);
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 2000);
+  };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="p-6 space-y-6">
+        <div className="flex items-center gap-2">
+          <Input 
+            value={shareUrl}
+            readOnly
+            className="bg-gray-50"
+          />
+          <Button onClick={copyShareLink}>
+            {showCopied ? "¡Copiado!" : "Copiar"}
+          </Button>
+        </div>
+
         <div 
           className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg"
           style={{ color: messageColor || "inherit" }}
