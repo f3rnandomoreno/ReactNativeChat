@@ -29,8 +29,8 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
   useEffect(() => {
     socketClient.joinRoom(roomId, userColor, userName);
 
-    const handleRoomState = (state: { 
-      currentMessage: string; 
+    const handleRoomState = (state: {
+      currentMessage: string;
       activeWriter: string | null;
       lastActivity: number;
       users: Record<string, UserInfo>;
@@ -38,7 +38,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       setCurrentMessage(state.currentMessage);
       setCurrentWriter(
         state.activeWriter
-          ? { 
+          ? {
               writerId: state.activeWriter,
               color: state.users[state.activeWriter].color,
               name: state.users[state.activeWriter].name,
@@ -56,8 +56,9 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     const handleWriterChanged = (writer: WriterInfo | null) => {
       setCurrentWriter(writer);
       if (writer) {
-        setTimeLeft(60);
-        setLastActivity(Date.now());
+        const now = Date.now();
+        setLastActivity(now);
+        setTimeLeft(60); // Tiempo inicial cuando cambia el escritor
       } else {
         setTimeLeft(null);
         setLastActivity(null);
@@ -69,8 +70,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       setMessageColor(color);
       setWriterName(writerName);
       setLastActivity(lastActivity);
-      // Reset timer on activity
-      setTimeLeft(60);
+      // No reseteamos el timer aquí, se calculará basado en lastActivity
     };
 
     const handleMessageCleared = () => {
@@ -96,18 +96,24 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     socketClient.on("system_message", handleSystemMessage);
 
     // Timer countdown y limpieza automática
-    const timer = setInterval(() => {
-      if (lastActivity && currentWriter) {
-        const elapsed = Math.floor((Date.now() - lastActivity) / 1000);
-        const remaining = Math.max(0, 60 - elapsed);
-        setTimeLeft(remaining);
+    useEffect(() => {
+      const timer = setInterval(() => {
+        if (lastActivity && currentWriter) {
+          const elapsed = Math.floor((Date.now() - lastActivity) / 1000);
+          const remaining = Math.max(0, 60 - elapsed);
 
-        // Si el tiempo se acabó, limpiar el mensaje
-        if (remaining === 0) {
-          socketClient.clearMessage();
+          if (remaining === 0) {
+            socketClient.clearMessage();
+            setTimeLeft(0);
+          } else {
+            setTimeLeft(remaining);
+          }
         }
-      }
-    }, 1000);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }, [lastActivity, currentWriter]);
+
 
     return () => {
       socketClient.off("roomState", handleRoomState);
@@ -115,7 +121,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       socketClient.off("messageUpdate", handleMessageUpdate);
       socketClient.off("messageCleared", handleMessageCleared);
       socketClient.off("system_message", handleSystemMessage);
-      clearInterval(timer);
     };
   }, [userColor, roomId, userName]);
 
@@ -139,7 +144,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="p-6 space-y-6">
         <div className="flex items-center gap-2">
-          <Input 
+          <Input
             value={shareUrl}
             readOnly
             className="bg-gray-50"
@@ -150,7 +155,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
         </div>
 
         {systemMessages.map((message, index) => (
-          <div 
+          <div
             key={index}
             className="bg-blue-50 text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2"
           >
@@ -159,7 +164,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </div>
         ))}
 
-        <div 
+        <div
           className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg"
           style={{ color: messageColor || "inherit" }}
         >
@@ -192,12 +197,12 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           <h3 className="font-medium mb-2">Usuarios en la sala:</h3>
           <div className="space-y-2">
             {Object.entries(users).map(([userId, user]) => (
-              <div 
+              <div
                 key={userId}
                 className="flex items-center justify-between gap-2 p-2 rounded-lg bg-gray-50"
               >
                 <div className="flex items-center gap-2">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: user.color }}
                   />
@@ -218,16 +223,16 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
                     {user.requestingTurn ? "Turno solicitado" : "Pedir turno"}
                   </Button>
                 )}
-                {currentWriter?.writerId === socketClient.getSocketId() && 
-                 user.requestingTurn && userId !== socketClient.getSocketId() && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => grantTurn(userId)}
-                  >
-                    Dar turno
-                  </Button>
-                )}
+                {currentWriter?.writerId === socketClient.getSocketId() &&
+                  user.requestingTurn && userId !== socketClient.getSocketId() && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => grantTurn(userId)}
+                    >
+                      Dar turno
+                    </Button>
+                  )}
               </div>
             ))}
           </div>
