@@ -10,33 +10,17 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const isWritingRef = useRef(false);
+  const previousLengthRef = useRef(0);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isBlocked) return;
-
-      // Start writing on first keypress
-      if (!isWritingRef.current) {
-        socketClient.startWriting();
-        isWritingRef.current = true;
-      }
 
       if (e.key === "Enter") {
         socketClient.submitMessage();
         setValue("");
         isWritingRef.current = false;
         return;
-      }
-
-      if (e.key === "Backspace") {
-        socketClient.sendBackspace();
-        setValue(prev => prev.slice(0, -1));
-        return;
-      }
-
-      if (e.key.length === 1) {
-        socketClient.sendLetter(e.key);
-        setValue(prev => prev + e.key);
       }
     };
 
@@ -61,11 +45,35 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
     }
   }, [isBlocked]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isBlocked) return;
+
+    const newValue = e.target.value;
+
+    // Iniciar escritura si no está escribiendo
+    if (!isWritingRef.current) {
+      socketClient.startWriting();
+      isWritingRef.current = true;
+    }
+
+    // Detectar si es un borrado o nueva letra
+    if (newValue.length < previousLengthRef.current) {
+      socketClient.sendBackspace();
+    } else if (newValue.length > previousLengthRef.current) {
+      // Obtener la última letra añadida
+      const newLetter = newValue[newValue.length - 1];
+      socketClient.sendLetter(newLetter);
+    }
+
+    previousLengthRef.current = newValue.length;
+    setValue(newValue);
+  };
+
   return (
     <Input
       ref={inputRef}
       value={value}
-      onChange={() => {}} // Controlled input but changes handled by keydown
+      onChange={handleChange}
       placeholder={isBlocked ? "Espera tu turno..." : "Escribe tu mensaje..."}
       disabled={isBlocked}
       className="text-lg"
