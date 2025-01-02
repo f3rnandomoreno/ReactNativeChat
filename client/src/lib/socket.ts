@@ -4,10 +4,21 @@ import type { RoomState, WriterInfo, MessageUpdate } from "./types";
 class SocketClient {
   private socket: Socket;
   private handlers: Map<string, Function[]> = new Map();
+  public socketId: string | null = null;
 
   constructor() {
     this.socket = io(window.location.origin, {
       transports: ["websocket"],
+    });
+
+    this.socket.on("connect", () => {
+      console.log("Connected to server");
+      this.socketId = this.socket.id;
+    });
+
+    this.socket.on("disconnect", () => {
+      console.log("Disconnected from server");
+      this.socketId = null;
     });
 
     this.socket.on("room_state", (state: RoomState) => {
@@ -24,14 +35,6 @@ class SocketClient {
 
     this.socket.on("message_cleared", () => {
       this.emit("messageCleared");
-    });
-
-    this.socket.on("connect", () => {
-      console.log("Connected to server");
-    });
-
-    this.socket.on("disconnect", () => {
-      console.log("Disconnected from server");
     });
   }
 
@@ -57,6 +60,10 @@ class SocketClient {
 
   submitMessage() {
     this.socket.emit("submit");
+  }
+
+  getSocketId() {
+    return this.socketId;
   }
 
   on(event: string, handler: Function) {

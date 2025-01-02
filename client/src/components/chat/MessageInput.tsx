@@ -9,14 +9,22 @@ interface MessageInputProps {
 export function MessageInput({ isBlocked }: MessageInputProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const isWritingRef = useRef(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isBlocked) return;
 
+      // Start writing on first keypress
+      if (!isWritingRef.current) {
+        socketClient.startWriting();
+        isWritingRef.current = true;
+      }
+
       if (e.key === "Enter") {
         socketClient.submitMessage();
         setValue("");
+        isWritingRef.current = false;
         return;
       }
 
@@ -32,8 +40,19 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
       }
     };
 
+    const handleBlur = () => {
+      if (isWritingRef.current) {
+        socketClient.stopWriting();
+        isWritingRef.current = false;
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("blur", handleBlur);
+    };
   }, [isBlocked]);
 
   useEffect(() => {
@@ -47,7 +66,7 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
       ref={inputRef}
       value={value}
       onChange={() => {}} // Controlled input but changes handled by keydown
-      placeholder={isBlocked ? "Wait for your turn..." : "Type your message..."}
+      placeholder={isBlocked ? "Espera tu turno..." : "Escribe tu mensaje..."}
       disabled={isBlocked}
       className="text-lg"
     />

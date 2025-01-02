@@ -12,15 +12,18 @@ export function ChatRoom({ userColor }: ChatRoomProps) {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messageColor, setMessageColor] = useState("");
   const [currentWriter, setCurrentWriter] = useState<WriterInfo | null>(null);
-  const [socketId, setSocketId] = useState<string>();
 
   useEffect(() => {
     const roomId = "main"; // For simplicity, using a single room
     socketClient.joinRoom(roomId, userColor);
 
-    const handleRoomState = ({ currentMessage, activeWriter }) => {
-      setCurrentMessage(currentMessage);
-      setCurrentWriter(activeWriter ? { writerId: activeWriter, color: userColor } : null);
+    const handleRoomState = (state: { currentMessage: string; activeWriter: string | null }) => {
+      setCurrentMessage(state.currentMessage);
+      setCurrentWriter(
+        state.activeWriter
+          ? { writerId: state.activeWriter, color: userColor }
+          : null
+      );
     };
 
     const handleWriterChanged = (writer: WriterInfo | null) => {
@@ -35,6 +38,7 @@ export function ChatRoom({ userColor }: ChatRoomProps) {
     const handleMessageCleared = () => {
       setCurrentMessage("");
       setCurrentWriter(null);
+      setMessageColor("");
     };
 
     socketClient.on("roomState", handleRoomState);
@@ -50,7 +54,7 @@ export function ChatRoom({ userColor }: ChatRoomProps) {
     };
   }, [userColor]);
 
-  const isBlocked = currentWriter !== null && currentWriter.writerId !== socketId;
+  const isBlocked = currentWriter !== null && currentWriter.writerId !== socketClient.getSocketId();
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -59,16 +63,16 @@ export function ChatRoom({ userColor }: ChatRoomProps) {
           className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg"
           style={{ color: messageColor || "inherit" }}
         >
-          {currentMessage || "Start typing..."}
+          {currentMessage || "Empieza a escribir..."}
         </div>
-        
+
         <div className="relative">
           <MessageInput isBlocked={isBlocked} />
           <div 
             className="absolute -top-6 left-2 text-sm"
             style={{ color: currentWriter?.color }}
           >
-            {currentWriter ? "Someone is typing..." : ""}
+            {currentWriter ? "Alguien está escribiendo..." : ""}
           </div>
         </div>
       </CardContent>
