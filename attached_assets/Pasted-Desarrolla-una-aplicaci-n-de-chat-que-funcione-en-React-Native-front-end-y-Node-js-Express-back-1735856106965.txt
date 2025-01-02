@@ -1,0 +1,41 @@
+Desarrolla una aplicación de chat que funcione en React Native (front-end) y Node.js + Express (back-end) con las siguientes características:
+
+    Comunicación fluida letra a letra
+        Cada letra que un usuario escribe debe aparecer en tiempo real a la otra persona.
+        Al terminar de escribir (al soltar la tecla o pulsar un botón), esa sección del texto se “confirma” momentáneamente.
+        Si ambos usuarios escriben al mismo tiempo, el mensaje no se entiende (se superpone, se borra o queda anulado).
+
+    Borrado de mensajes y privacidad
+        Cuando el usuario pulsa “ENTER” para enviar, toda la conversación actual se borra de la base de datos.
+        No queda ningún registro del mensaje anterior (tanto en el front-end como en el back-end).
+        Esto refuerza la privacidad y la filosofía de “las palabras se las lleva el viento”.
+
+    Bloqueo de escritura mientras otro usuario habla
+        Mientras un usuario está escribiendo, el otro no puede escribir (el campo de entrada se bloquea).
+        Se fomenta la escucha activa y se emula la comunicación real: uno habla y el otro escucha.
+
+    Eficiencia y ahorro de recursos
+        La base de datos solo almacena una frase en cada momento para cada conversación.
+        Al pulsar “ENTER”, se elimina la frase anterior, ahorrando espacio y recursos de servidor.
+        Se busca un consumo eléctrico reducido para proteger el medioambiente.
+
+    Foco en la atención del usuario
+        Únicamente se muestra una frase en pantalla.
+        Esto facilita la concentración en el mensaje y mejora la memoria, ya que el usuario debe retener lo que acaba de leer antes de que desaparezca.
+
+    Notificaciones y colores de usuario
+        Cada persona elige un color que representa su participación en el chat.
+        El sistema debe permitir la configuración de este color para mostrar quién está hablando.
+        Al marcar un mensaje como leído (por ejemplo, al pulsar ENTER), se registra que ese color ya leyó la frase.
+
+    Objetivo
+        Crear un entorno conversacional que se sienta cercano y privado, incentivando la escucha activa y la confidencialidad.
+        Basar la lógica de backend en Node.js + Express y el frontend en React Native, con una comunicación en tiempo real (por ejemplo, usando websockets).
+
+Instrucciones para la IA
+
+    Generar la arquitectura de la aplicación y los componentes básicos de la interfaz en React Native.
+    Proveer la estructura de APIs y endpoints en Node.js + Express para manejar la mensajería en tiempo real y el borrado de datos tras cada envío.
+    Explicar o mostrar cómo manejar el flujo de “bloqueo de escritura” y la visualización instantánea de cada letra, idealmente mediante websockets.
+    Incluir un sistema mínimo de “sesiones” o “salas de chat” para identificar a cada usuario por un color, almacenando la información necesaria solo mientras dure la frase actual.
+    Garantizar que, tras pulsar “ENTER”, se borra el contenido tanto en el cliente como en el servidor de manera definitiva.
