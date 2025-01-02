@@ -36,10 +36,18 @@ class SocketClient {
     this.socket.on("message_cleared", () => {
       this.emit("messageCleared");
     });
+
+    this.socket.on("system_message", (message: string) => {
+      this.emit("system_message", message);
+    });
+
+    this.socket.on("turn_requested", (data: { userId: string; userName: string }) => {
+      this.emit("turn_requested", data);
+    });
   }
 
-  joinRoom(roomId: string, color: string) {
-    this.socket.emit("join_room", { roomId, color });
+  joinRoom(roomId: string, color: string, name: string) {
+    this.socket.emit("join_room", { roomId, color, name });
   }
 
   startWriting() {
@@ -60,6 +68,14 @@ class SocketClient {
 
   submitMessage() {
     this.socket.emit("submit");
+  }
+
+  requestTurn() {
+    this.socket.emit("request_turn");
+  }
+
+  grantTurn(userId: string) {
+    this.socket.emit("grant_turn", userId);
   }
 
   getSocketId() {
@@ -86,7 +102,7 @@ class SocketClient {
   private emit(event: string, data?: any) {
     const handlers = this.handlers.get(event);
     if (handlers) {
-      handlers.forEach(handler => handler(data));
+      handlers.forEach((handler) => handler(data));
     }
   }
 }
