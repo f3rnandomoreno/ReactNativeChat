@@ -44,6 +44,10 @@ class SocketClient {
     this.socket.on("turn_requested", (data: { userId: string; userName: string }) => {
       this.emit("turn_requested", data);
     });
+
+    this.socket.on("room_users_update", (users: Record<string, any>) => {
+      this.emit("room_users_update", users);
+    });
   }
 
   joinRoom(roomId: string, color: string, name: string) {
@@ -75,7 +79,7 @@ class SocketClient {
   }
 
   getSocketId() {
-    return this.socketId;
+    return this.socket.id;
   }
 
   on(event: string, handler: Function) {

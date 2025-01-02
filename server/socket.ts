@@ -20,16 +20,26 @@ export function setupSocketServer(httpServer: HTTPServer) {
 
   const rooms = new Map<string, RoomState>();
 
+  function emitRoomUsers(roomId: string) {
+    const room = rooms.get(roomId);
+    if (room) {
+      const usersObject = Object.fromEntries(
+        Array.from(room.users.entries()).map(([id, info]) => [id, info])
+      );
+      io.to(roomId).emit("room_users_update", usersObject);
+    }
+  }
+
   // Check for inactive writers
   setInterval(() => {
-    for (const [roomId, room] of rooms.entries()) {
+    rooms.forEach((room, roomId) => {
       if (room.activeWriter && Date.now() - room.lastActivity > INACTIVITY_TIMEOUT) {
         room.activeWriter = null;
         io.to(roomId).emit("writer_changed", null);
         io.to(roomId).emit("system_message", "Se liberó el turno por inactividad");
       }
-    }
-  }, 1000); // Check every second
+    });
+  }, 1000);
 
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
@@ -42,6 +52,7 @@ export function setupSocketServer(httpServer: HTTPServer) {
         const room = rooms.get(currentRoom);
         if (room) {
           room.users.delete(socket.id);
+          emitRoomUsers(currentRoom);
         }
       }
 
@@ -67,12 +78,16 @@ export function setupSocketServer(httpServer: HTTPServer) {
         Array.from(room.users.entries()).map(([id, info]) => [id, info])
       );
 
+      // First emit room state to the joining user
       socket.emit("room_state", {
         currentMessage: room.currentMessage,
         activeWriter: room.activeWriter,
         lastActivity: room.lastActivity,
         users: usersObject,
       });
+
+      // Then emit updated users list to all users in the room
+      emitRoomUsers(roomId);
 
       // Notify others of new user
       socket.to(roomId).emit("system_message", `${name} se unió a la sala`);
@@ -86,6 +101,7 @@ export function setupSocketServer(httpServer: HTTPServer) {
       if (!user) return;
 
       user.requestingTurn = true;
+      emitRoomUsers(currentRoom); // Emit updated users list
       io.to(currentRoom).emit("turn_requested", {
         userId: socket.id,
         userName: user.name,
@@ -101,6 +117,7 @@ export function setupSocketServer(httpServer: HTTPServer) {
         const user = room.users.get(userId);
         if (user) {
           user.requestingTurn = false;
+          emitRoomUsers(currentRoom); // Emit updated users list
           io.to(currentRoom).emit("writer_changed", {
             writerId: userId,
             color: user.color,
@@ -176,6 +193,8 @@ export function setupSocketServer(httpServer: HTTPServer) {
           if (user) {
             io.to(currentRoom).emit("system_message", `${user.name} dejó la sala`);
           }
+          // Emit updated users list after user disconnects
+          emitRoomUsers(currentRoom);
         }
       }
     });

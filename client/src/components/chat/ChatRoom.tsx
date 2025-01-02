@@ -80,23 +80,30 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       }, 5000);
     };
 
+    const handleRoomUsersUpdate = (updatedUsers: Record<string, UserInfo>) => {
+      setUsers(updatedUsers);
+    };
+
     socketClient.on("roomState", handleRoomState);
     socketClient.on("writerChanged", handleWriterChanged);
     socketClient.on("messageUpdate", handleMessageUpdate);
     socketClient.on("messageCleared", handleMessageCleared);
     socketClient.on("system_message", handleSystemMessage);
+    socketClient.on("room_users_update", handleRoomUsersUpdate);
 
     // Timer countdown
     const timer = setInterval(() => {
       setTimeLeft(prev => prev !== null ? Math.max(0, prev - 1) : null);
     }, 1000);
 
+    // Cleanup function
     return () => {
       socketClient.off("roomState", handleRoomState);
       socketClient.off("writerChanged", handleWriterChanged);
       socketClient.off("messageUpdate", handleMessageUpdate);
       socketClient.off("messageCleared", handleMessageCleared);
       socketClient.off("system_message", handleSystemMessage);
+      socketClient.off("room_users_update", handleRoomUsersUpdate);
       clearInterval(timer);
     };
   }, [userColor, roomId, userName]);
