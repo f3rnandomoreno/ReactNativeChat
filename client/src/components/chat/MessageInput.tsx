@@ -56,8 +56,8 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
       isWritingRef.current = true;
     }
 
-    // Actualizar el mensaje completo
-    socketClient.updateMessage(newValue);
+    // Actualizar el mensaje y la última actividad
+    socketClient.updateMessage(newValue, Date.now());
     previousValueRef.current = newValue;
     setValue(newValue);
   };

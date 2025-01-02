@@ -22,6 +22,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
   const [systemMessages, setSystemMessages] = useState<string[]>([]);
   const [users, setUsers] = useState<Record<string, UserInfo>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [lastActivity, setLastActivity] = useState<number | null>(null);
 
   const shareUrl = `${window.location.origin}/room/${roomId}`;
 
@@ -45,6 +46,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           : null
       );
       setUsers(state.users);
+      setLastActivity(state.lastActivity);
       if (state.activeWriter) {
         const remainingTime = Math.max(0, 60 - Math.floor((Date.now() - state.lastActivity) / 1000));
         setTimeLeft(remainingTime);
@@ -53,15 +55,22 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
 
     const handleWriterChanged = (writer: WriterInfo | null) => {
       setCurrentWriter(writer);
-      setTimeLeft(writer ? 60 : null);
+      if (writer) {
+        setTimeLeft(60);
+        setLastActivity(Date.now());
+      } else {
+        setTimeLeft(null);
+        setLastActivity(null);
+      }
     };
 
-    const handleMessageUpdate = ({ message, color, writerName }: MessageUpdate) => {
+    const handleMessageUpdate = ({ message, color, writerName, lastActivity }: MessageUpdate) => {
       setCurrentMessage(message);
       setMessageColor(color);
       setWriterName(writerName);
+      setLastActivity(lastActivity);
       // Reset timer on activity
-      if (currentWriter) setTimeLeft(60);
+      setTimeLeft(60);
     };
 
     const handleMessageCleared = () => {
@@ -70,11 +79,11 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       setMessageColor("");
       setWriterName("");
       setTimeLeft(null);
+      setLastActivity(null);
     };
 
     const handleSystemMessage = (message: string) => {
       setSystemMessages(prev => [...prev, message]);
-      // Remove message after 5 seconds
       setTimeout(() => {
         setSystemMessages(prev => prev.filter(msg => msg !== message));
       }, 5000);
@@ -86,9 +95,18 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     socketClient.on("messageCleared", handleMessageCleared);
     socketClient.on("system_message", handleSystemMessage);
 
-    // Timer countdown
+    // Timer countdown y limpieza automática
     const timer = setInterval(() => {
-      setTimeLeft(prev => prev !== null ? Math.max(0, prev - 1) : null);
+      if (lastActivity && currentWriter) {
+        const elapsed = Math.floor((Date.now() - lastActivity) / 1000);
+        const remaining = Math.max(0, 60 - elapsed);
+        setTimeLeft(remaining);
+
+        // Si el tiempo se acabó, limpiar el mensaje
+        if (remaining === 0) {
+          socketClient.clearMessage();
+        }
+      }
     }, 1000);
 
     return () => {
@@ -131,7 +149,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </Button>
         </div>
 
-        {/* System Messages */}
         {systemMessages.map((message, index) => (
           <div 
             key={index}
@@ -142,7 +159,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </div>
         ))}
 
-        {/* Current Message */}
         <div 
           className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg"
           style={{ color: messageColor || "inherit" }}
@@ -157,15 +173,14 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </div>
         </div>
 
-        {/* Active Writer and Timer */}
         <div className="relative">
           <MessageInput isBlocked={isBlocked} />
           <div className="absolute -top-6 left-2 text-sm flex items-center gap-4">
             <span style={{ color: currentWriter?.color }}>
               {currentWriter ? `${currentWriter.name} está escribiendo...` : ""}
             </span>
-            {timeLeft !== null && timeLeft < 30 && (
-              <span className="flex items-center gap-1 text-orange-500">
+            {timeLeft !== null && (
+              <span className={`flex items-center gap-1 ${timeLeft < 30 ? 'text-orange-500' : 'text-gray-500'}`}>
                 <Clock className="h-4 w-4" />
                 {timeLeft}s
               </span>
@@ -173,7 +188,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </div>
         </div>
 
-        {/* Users List and Turn Management */}
         <div className="border-t pt-4 mt-4">
           <h3 className="font-medium mb-2">Usuarios en la sala:</h3>
           <div className="space-y-2">
