@@ -8,32 +8,34 @@ test("chat basic functionality", async ({ page }) => {
   await page.fill('input[placeholder="Tu nombre"]', "Test User");
   await page.click('button:has-text("Continuar")');
 
-  // Seleccionar un color
-  const redColor = await page.locator(
-    'button[style*="background-color: #ef4444"]'
-  );
-  await redColor.click();
+  // Esperar a que aparezca el selector de color
+  await page.waitForSelector('h2:has-text("Choose Your Color")');
 
-  // Unirse al chat
+  // Seleccionar el color rojo (primer color)
+  const colorButtons = await page.locator("button.rounded-full").all();
+  await colorButtons[0].click();
+
+  // Esperar a que el botón "Join Chat" esté habilitado y hacer clic
+  await page.waitForSelector('button:has-text("Join Chat"):not([disabled])');
   await page.click('button:has-text("Join Chat")');
 
-  // Esperar a que se cargue el chat
-  await page.waitForSelector(".messages-container", { timeout: 5000 });
+  // Esperar a que se cargue el chat (esperando el contenedor de mensaje)
+  await page.waitForSelector('div:has-text("Empieza a escribir...")', {
+    timeout: 5000,
+  });
 
-  // Escribir y enviar un mensaje
-  await page.fill(
-    'input[placeholder="Escribe un mensaje..."]',
-    "Hello, this is a test message!"
-  );
-  await page.click('button[type="submit"]');
+  // Escribir un mensaje
+  await page.locator("textarea").click();
+  await page.keyboard.type("Hello, this is a test message!");
+  await page.keyboard.press("Enter");
 
   // Verificar que el mensaje aparece en el chat
-  const message = await page
-    .locator('text="Hello, this is a test message!"')
-    .first();
-  await expect(message).toBeVisible();
+  await expect(
+    page.locator('text="Hello, this is a test message!"')
+  ).toBeVisible();
 
-  // Verificar que el nombre del usuario aparece
-  const username = await page.locator('text="Test User"').first();
-  await expect(username).toBeVisible();
+  // Verificar que el nombre del usuario aparece como escritor
+  await expect(
+    page.locator('text="Test User está escribiendo..."')
+  ).toBeVisible();
 });
