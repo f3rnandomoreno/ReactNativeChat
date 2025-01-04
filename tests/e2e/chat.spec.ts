@@ -86,7 +86,9 @@ test("chat basic functionality", async ({ page }) => {
   console.log("✅ Mensaje enviado");
 
   // Verificar que el mensaje completo aparece en el chat
-  await expect(page.locator(`div.text-xl >> text="${message}"`)).toBeVisible({
+  await expect(
+    page.locator(`div.min-h-\\[200px\\] div.text-center >> text="${message}"`)
+  ).toBeVisible({
     timeout: 5000,
   });
   console.log("✅ Mensaje visible en el chat");

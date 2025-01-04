@@ -23,6 +23,11 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
   const [users, setUsers] = useState<Record<string, UserInfo>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [lastMessage, setLastMessage] = useState<{
+    text: string;
+    color: string;
+    author: string;
+  } | null>(null);
 
   const shareUrl = `${window.location.origin}/room/${roomId}`;
 
@@ -88,11 +93,18 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       writerName,
     }: MessageUpdate) => {
       console.log("[handleMessageUpdate]", { message, color, writerName });
-      // Actualizar el mensaje si viene del escritor activo actual
-      // No dependemos del estado local currentWriter
       setCurrentMessage(message);
       setMessageColor(color);
       setWriterName(writerName);
+
+      // Si no hay escritor activo, guardar como último mensaje
+      if (!currentWriter) {
+        setLastMessage({
+          text: message,
+          color: color,
+          author: writerName,
+        });
+      }
     };
 
     const handleMessageCleared = () => {
@@ -183,9 +195,22 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           style={{ color: messageColor || "inherit" }}
         >
           <div className="text-center">
-            {currentWriter ? currentMessage : "Empieza a escribir..."}
-            {writerName && (
-              <div className="text-sm mt-2 opacity-75">— {writerName}</div>
+            {currentWriter ? (
+              <>
+                {currentMessage}
+                {writerName && (
+                  <div className="text-sm mt-2 opacity-75">— {writerName}</div>
+                )}
+              </>
+            ) : lastMessage ? (
+              <>
+                {lastMessage.text}
+                <div className="text-sm mt-2 opacity-75">
+                  — {lastMessage.author}
+                </div>
+              </>
+            ) : (
+              "Empieza a escribir..."
             )}
           </div>
         </div>

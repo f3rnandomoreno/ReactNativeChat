@@ -278,29 +278,26 @@ export class RoomManager {
 
   public submitMessage(socket: Socket, roomId: string) {
     const room = this.rooms.get(roomId);
-    if (!room) return;
+    if (!room) return false;
 
     // Verificar si el usuario es el escritor activo
-    if (room.activeWriter !== socket.id) {
-      return;
-    }
+    if (room.activeWriter !== socket.id) return false;
+
+    const user = room.users.get(socket.id);
+    if (!user) return false;
+
+    // Emitir el mensaje final a todos los clientes
+    this.io.to(roomId).emit("message_update", {
+      message: room.currentMessage,
+      color: user.color,
+      writerName: user.name,
+    });
 
     // Limpiar el estado del escritor
-    this.clearWriter(roomId, socket.id, "submitted");
+    room.activeWriter = null;
+    this.io.to(roomId).emit("writer_changed", null);
 
-    // Emitir el mensaje limpio a todos los clientes
-    this.io.to(roomId).emit("message_cleared");
-
-    // Emitir el estado actualizado de la sala a todos
-    const usersObject = Object.fromEntries(
-      Array.from(room.users.entries()).map(([id, info]) => [id, info])
-    );
-    this.io.to(roomId).emit("room_state", {
-      currentMessage: "",
-      activeWriter: null,
-      lastActivity: room.lastActivity,
-      users: usersObject,
-    });
+    return true;
   }
 
   public requestTurn(socket: Socket, roomId: string): boolean {

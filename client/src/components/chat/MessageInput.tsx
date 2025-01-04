@@ -29,7 +29,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
     if (e.key === "Enter" && message.trim()) {
       stopWriting();
       socketClient.submitMessage();
-      setMessage("");
     }
   };
 
