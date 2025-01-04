@@ -14,8 +14,8 @@ export function setupSocketServer(httpServer: HTTPServer) {
   const io = new Server(httpServer, {
     cors: {
       origin: "*",
-      methods: ["GET", "POST"]
-    }
+      methods: ["GET", "POST"],
+    },
   });
 
   const rooms = new Map<string, RoomState>();
@@ -33,10 +33,16 @@ export function setupSocketServer(httpServer: HTTPServer) {
   // Check for inactive writers
   setInterval(() => {
     rooms.forEach((room, roomId) => {
-      if (room.activeWriter && Date.now() - room.lastActivity > INACTIVITY_TIMEOUT) {
+      if (
+        room.activeWriter &&
+        Date.now() - room.lastActivity > INACTIVITY_TIMEOUT
+      ) {
         room.activeWriter = null;
         io.to(roomId).emit("writer_changed", null);
-        io.to(roomId).emit("system_message", "Se liberó el turno por inactividad");
+        io.to(roomId).emit(
+          "system_message",
+          "Se liberó el turno por inactividad"
+        );
       }
     });
   }, 1000);
@@ -131,15 +137,21 @@ export function setupSocketServer(httpServer: HTTPServer) {
       if (!currentRoom) return;
 
       const room = rooms.get(currentRoom)!;
-      if (!room.activeWriter) {
+      const user = room.users.get(socket.id)!;
+
+      if (!room.activeWriter || room.activeWriter !== socket.id) {
+        // Clear previous writer's state
+        room.currentMessage = "";
         room.activeWriter = socket.id;
-        const user = room.users.get(socket.id)!;
-        io.to(currentRoom).emit("writer_changed", {
-          writerId: socket.id,
-          color: user.color,
-          name: user.name,
-        });
+        io.to(currentRoom).emit("message_cleared");
       }
+
+      // Always emit writer_changed to ensure the UI shows the writing state
+      io.to(currentRoom).emit("writer_changed", {
+        writerId: socket.id,
+        color: user.color,
+        name: user.name,
+      });
     });
 
     socket.on("stop_writing", () => {
@@ -173,9 +185,8 @@ export function setupSocketServer(httpServer: HTTPServer) {
 
       const room = rooms.get(currentRoom)!;
       if (room.activeWriter === socket.id) {
-        room.currentMessage = "";
-        room.activeWriter = null;
-        io.to(currentRoom).emit("message_cleared");
+        // Don't clear the writer state here, it will be cleared when another user starts writing
+        room.lastActivity = Date.now(); // Update last activity to prevent timeout
       }
     });
 
@@ -191,7 +202,10 @@ export function setupSocketServer(httpServer: HTTPServer) {
             io.to(currentRoom).emit("writer_changed", null);
           }
           if (user) {
-            io.to(currentRoom).emit("system_message", `${user.name} dejó la sala`);
+            io.to(currentRoom).emit(
+              "system_message",
+              `${user.name} dejó la sala`
+            );
           }
           // Emit updated users list after user disconnects
           emitRoomUsers(currentRoom);

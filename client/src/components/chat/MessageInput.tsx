@@ -18,8 +18,6 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
 
       if (e.key === "Enter") {
         socketClient.submitMessage();
-        setValue("");
-        isWritingRef.current = false;
         return;
       }
     };
@@ -42,6 +40,13 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
   useEffect(() => {
     if (!isBlocked && inputRef.current) {
       inputRef.current.focus();
+    }
+  }, [isBlocked]);
+
+  useEffect(() => {
+    if (isBlocked) {
+      setValue("");
+      isWritingRef.current = false;
     }
   }, [isBlocked]);
 
