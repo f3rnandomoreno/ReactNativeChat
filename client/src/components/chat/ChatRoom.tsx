@@ -22,6 +22,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
   const [systemMessages, setSystemMessages] = useState<string[]>([]);
   const [users, setUsers] = useState<Record<string, UserInfo>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const shareUrl = `${window.location.origin}/room/${roomId}`;
 
@@ -46,21 +47,39 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           name: state.users[state.activeWriter].name,
         };
         setCurrentWriter(writer);
+        // Si el escritor activo no soy yo, asegurar que estoy bloqueado
+        if (writer.writerId !== socketClient.getSocketId()) {
+          setIsBlocked(true);
+        }
       } else {
         setCurrentWriter(null);
+        setIsBlocked(false);
       }
     };
 
     const handleWriterChanged = (writer: WriterInfo | null) => {
       console.log("[handleWriterChanged]", writer);
-      setCurrentWriter(writer);
 
-      // Si hay un escritor activo y no soy yo, limpiar el mensaje actual
-      if (writer && writer.writerId !== socketClient.getSocketId()) {
+      // Solo limpiar el mensaje si:
+      // 1. Se liberó el escritor (writer es null)
+      // 2. El escritor cambió a uno diferente
+      if (
+        !writer || // Se liberó el escritor
+        (currentWriter && writer && currentWriter.writerId !== writer.writerId) // Cambio de escritor
+      ) {
+        console.log(
+          "[handleWriterChanged] Limpiando mensaje por cambio de escritor"
+        );
         setCurrentMessage("");
         setMessageColor("");
         setWriterName("");
       }
+
+      setCurrentWriter(writer);
+      // Actualizar el estado de bloqueo basado en el nuevo escritor
+      setIsBlocked(
+        writer !== null && writer.writerId !== socketClient.getSocketId()
+      );
     };
 
     const handleMessageUpdate = ({
@@ -69,11 +88,11 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       writerName,
     }: MessageUpdate) => {
       console.log("[handleMessageUpdate]", { message, color, writerName });
+      // Actualizar el mensaje si viene del escritor activo actual
+      // No dependemos del estado local currentWriter
       setCurrentMessage(message);
       setMessageColor(color);
       setWriterName(writerName);
-      // Reset timer on activity
-      if (currentWriter) setTimeLeft(60);
     };
 
     const handleMessageCleared = () => {
@@ -123,10 +142,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     };
   }, [userColor, roomId, userName]);
 
-  const isBlocked =
-    currentWriter !== null &&
-    currentWriter.writerId !== socketClient.getSocketId();
-
   const copyShareLink = async () => {
     await navigator.clipboard.writeText(shareUrl);
     setShowCopied(true);
@@ -168,7 +183,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           style={{ color: messageColor || "inherit" }}
         >
           <div className="text-center">
-            {currentMessage || "Empieza a escribir..."}
+            {currentWriter ? currentMessage : "Empieza a escribir..."}
             {writerName && (
               <div className="text-sm mt-2 opacity-75">— {writerName}</div>
             )}

@@ -60,6 +60,11 @@ export class RoomManager {
     // Guardar el nombre antes de limpiar el estado
     const userName = user.name;
 
+    // Solo limpiar el mensaje si es por envío o inactividad
+    if (reason === "submitted" || reason === "inactivity") {
+      room.currentMessage = "";
+    }
+
     room.activeWriter = null;
     this.io.to(roomId).emit("writer_changed", null);
 
@@ -189,7 +194,6 @@ export class RoomManager {
 
     // Establecer como escritor activo
     room.activeWriter = socket.id;
-    room.currentMessage = "";
     room.lastActivity = Date.now();
 
     // Notificar a todos los clientes
@@ -198,7 +202,6 @@ export class RoomManager {
       console.log(`[RoomManager.startWriting] Setting new writer:`, writerInfo);
       // Asegurar que todos los clientes reciban la notificación
       this.io.to(roomId).emit("writer_changed", writerInfo);
-      this.io.to(roomId).emit("message_cleared");
 
       // Emitir el estado actualizado de la sala a todos
       const usersObject = Object.fromEntries(
@@ -249,16 +252,10 @@ export class RoomManager {
 
     // Emitir la actualización del mensaje a todos los clientes
     this.io.to(roomId).emit("message_update", {
-      message: room.currentMessage,
+      message,
       color: user.color,
       writerName: user.name,
     });
-
-    // Asegurar que todos los clientes sepan quién está escribiendo
-    const writerInfo = this.getWriterInfo(room, socket.id);
-    if (writerInfo) {
-      this.io.to(roomId).emit("writer_changed", writerInfo);
-    }
 
     return true;
   }
@@ -279,31 +276,31 @@ export class RoomManager {
     return true;
   }
 
-  public submitMessage(socket: Socket, roomId: string): boolean {
+  public submitMessage(socket: Socket, roomId: string) {
     const room = this.rooms.get(roomId);
-    if (!room || room.activeWriter !== socket.id) {
-      console.log(
-        `[RoomManager.submitMessage] Not allowed. Room: ${roomId}, User: ${socket.id}, Active writer: ${room?.activeWriter}`
-      );
-      return false;
+    if (!room) return;
+
+    // Verificar si el usuario es el escritor activo
+    if (room.activeWriter !== socket.id) {
+      return;
     }
 
-    const user = room.users.get(socket.id)!;
-    console.log(
-      `[RoomManager.submitMessage] Submitting message from ${user.name}: "${room.currentMessage}"`
-    );
-
-    // Enviar el mensaje primero
-    this.io.to(roomId).emit("message_update", {
-      message: room.currentMessage,
-      color: user.color,
-      writerName: user.name,
-    });
-
-    // Luego limpiar el escritor
+    // Limpiar el estado del escritor
     this.clearWriter(roomId, socket.id, "submitted");
 
-    return true;
+    // Emitir el mensaje limpio a todos los clientes
+    this.io.to(roomId).emit("message_cleared");
+
+    // Emitir el estado actualizado de la sala a todos
+    const usersObject = Object.fromEntries(
+      Array.from(room.users.entries()).map(([id, info]) => [id, info])
+    );
+    this.io.to(roomId).emit("room_state", {
+      currentMessage: "",
+      activeWriter: null,
+      lastActivity: room.lastActivity,
+      users: usersObject,
+    });
   }
 
   public requestTurn(socket: Socket, roomId: string): boolean {

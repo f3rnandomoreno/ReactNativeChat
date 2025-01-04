@@ -160,67 +160,29 @@ test("writing blocking between users", async ({ browser }) => {
 
   // Verificar estado inicial
   console.log("🔵 Verificando estado inicial de los inputs");
-  const input1Disabled = await page1
-    .locator('input[placeholder="Escribe tu mensaje..."]')
-    .isDisabled();
-  const input2Disabled = await page2
-    .locator('input[placeholder="Escribe tu mensaje..."]')
-    .isDisabled();
-  console.log(
-    `🔵 Estado inicial - Input Usuario 1: ${
-      input1Disabled ? "bloqueado" : "desbloqueado"
-    }`
-  );
-  console.log(
-    `🔵 Estado inicial - Input Usuario 2: ${
-      input2Disabled ? "bloqueado" : "desbloqueado"
-    }`
-  );
-
-  // Usuario 1 empieza a escribir
-  console.log("🔵 Usuario 1: Intentando escribir");
   const messageInput1 = await page1.locator(
     'input[placeholder="Escribe tu mensaje..."]'
   );
-  await messageInput1.type("Hola", { delay: 100 });
-  console.log("✅ Usuario 1 escribiendo");
-
-  // Esperar a que se propague el estado
-  console.log("🔵 Esperando propagación del estado (1s)");
-  await page1.waitForTimeout(1000);
-
-  // Verificar estado del input del Usuario 2
-  console.log("🔵 Verificando estado del input del Usuario 2");
   const messageInput2 = await page2.locator(
     'input[placeholder="Escribe tu mensaje..."]'
   );
 
-  // Esperar más tiempo para que se propague el estado
-  console.log("🔵 Esperando más tiempo para la propagación del estado (2s)");
-  await page2.waitForTimeout(2000);
+  await expect(messageInput1).toBeEnabled();
+  await expect(messageInput2).toBeEnabled();
+  console.log("✅ Ambos inputs inicialmente habilitados");
 
-  const isDisabled = await messageInput2.isDisabled();
+  // Usuario 1 empieza a escribir
+  console.log("🔵 Usuario 1: Empezando a escribir");
+  await messageInput1.focus();
+  await messageInput1.type("Hola", { delay: 100 });
+  console.log("✅ Usuario 1 está escribiendo");
+
+  // Verificar que el Usuario 2 está bloqueado mientras Usuario 1 escribe
   console.log(
-    `🔵 Estado del input del Usuario 2: ${
-      isDisabled ? "bloqueado" : "desbloqueado"
-    }`
+    "🔵 Verificando que Usuario 2 está bloqueado mientras Usuario 1 escribe"
   );
-
-  // Verificar si hay algún mensaje de error en la consola del navegador
-  const logs1 = await context1.pages()[0].evaluate(() => {
-    // @ts-ignore
-    return window.consoleLog || [];
-  });
-  console.log("🔵 Logs del navegador (Usuario 1):", logs1);
-
-  const logs2 = await context2.pages()[0].evaluate(() => {
-    // @ts-ignore
-    return window.consoleLog || [];
-  });
-  console.log("🔵 Logs del navegador (Usuario 2):", logs2);
-
-  await expect(messageInput2).toBeDisabled({ timeout: 5000 });
-  console.log("✅ Input del Usuario 2 bloqueado");
+  await expect(messageInput2).toBeDisabled();
+  console.log("✅ Input del Usuario 2 bloqueado durante escritura");
 
   // Verificar mensaje de escritura
   console.log("🔵 Verificando mensaje de escritura");
@@ -230,28 +192,112 @@ test("writing blocking between users", async ({ browser }) => {
   await expect(writerMessage).toBeVisible({ timeout: 5000 });
   console.log("✅ Mensaje de escritura visible para Usuario 2");
 
-  // Usuario 1 envía el mensaje
+  // Usuario 1 presiona Enter para enviar el mensaje
   console.log("🔵 Usuario 1: Enviando mensaje");
   await page1.keyboard.press("Enter");
   console.log("✅ Usuario 1 envió el mensaje");
 
   // Esperar a que se propague el estado
-  console.log("🔵 Esperando propagación del estado final (1s)");
+  console.log("🔵 Esperando propagación del estado (1s)");
   await page1.waitForTimeout(1000);
 
-  // Verificar que Usuario 2 puede escribir
-  console.log("🔵 Verificando que Usuario 2 puede escribir");
-  await expect(messageInput2).toBeEnabled();
-  const isEnabled = await messageInput2.isEnabled();
+  // Verificar que Usuario 2 está desbloqueado después del Enter
   console.log(
-    `🔵 Estado final del input del Usuario 2: ${
-      isEnabled ? "desbloqueado" : "bloqueado"
-    }`
+    "🔵 Verificando que Usuario 2 está desbloqueado después del Enter"
   );
-  console.log("✅ Input del Usuario 2 desbloqueado");
+  await expect(messageInput2).toBeEnabled();
+  console.log("✅ Input del Usuario 2 desbloqueado después del Enter");
 
   // Cerrar los contextos
   console.log("🔵 Cerrando contextos del navegador");
+  await context1.close();
+  await context2.close();
+});
+
+test("bidirectional writing visibility", async ({ browser }) => {
+  // Crear dos páginas/contextos diferentes
+  console.log("🔵 Creando contextos de navegador");
+  const context1 = await browser.newContext();
+  const context2 = await browser.newContext();
+  const page1 = await context1.newPage();
+  const page2 = await context2.newPage();
+
+  // Función helper para unirse al chat (reutilizada del test anterior)
+  async function joinChat(page: any, userName: string, url?: string) {
+    console.log(`🔵 ${userName}: Iniciando proceso de unión al chat`);
+    await page.goto(url || "http://localhost:5000");
+    console.log(`🔵 ${userName}: Página cargada`);
+
+    await page.waitForFunction(
+      () => {
+        // @ts-ignore
+        return window.socketConnected === true;
+      },
+      { timeout: 5000 }
+    );
+    console.log(`🔵 ${userName}: Socket conectado`);
+
+    await page.fill('input[placeholder="Tu nombre"]', userName);
+    await page.click('button:has-text("Continuar")');
+    console.log(`🔵 ${userName}: Nombre introducido`);
+
+    await page.waitForSelector('h2:has-text("Choose Your Color")');
+    const colorButtons = await page.locator("button.rounded-full").all();
+    await colorButtons[0].click();
+    console.log(`🔵 ${userName}: Color seleccionado`);
+
+    await page.click('button:has-text("Join Chat")');
+    console.log(`🔵 ${userName}: Botón Join Chat clickeado`);
+
+    await page.waitForSelector('div:has-text("Empieza a escribir...")', {
+      timeout: 10000,
+    });
+    console.log(`🔵 ${userName}: Chat cargado`);
+  }
+
+  // Unir Usuario 1 (creador de la sala)
+  console.log("🔵 Uniendo Usuario 1 (creador)");
+  await joinChat(page1, "Usuario 1");
+  const roomUrl = await page1.locator("input.bg-gray-50").inputValue();
+
+  // Unir Usuario 2
+  console.log("🔵 Uniendo Usuario 2");
+  await joinChat(page2, "Usuario 2", roomUrl);
+  console.log("✅ Ambos usuarios unidos al chat");
+
+  // Obtener referencias a los inputs
+  const input1 = await page1.locator(
+    'input[placeholder="Escribe tu mensaje..."]'
+  );
+  const input2 = await page2.locator(
+    'input[placeholder="Escribe tu mensaje..."]'
+  );
+
+  // Test Usuario 1 escribiendo -> Usuario 2 viendo
+  console.log("🔵 Probando: Usuario 1 escribe -> Usuario 2 ve");
+  await input1.type("Mensaje del Usuario 1", { delay: 100 });
+
+  // Verificar que Usuario 2 ve el mensaje
+  await expect(page2.locator(`text="Mensaje del Usuario 1"`)).toBeVisible({
+    timeout: 5000,
+  });
+  console.log("✅ Usuario 2 ve el mensaje del Usuario 1");
+
+  // Usuario 1 libera el turno
+  await page1.keyboard.press("Enter");
+  await page1.waitForTimeout(1000);
+
+  // Test Usuario 2 escribiendo -> Usuario 1 viendo
+  console.log("🔵 Probando: Usuario 2 escribe -> Usuario 1 ve");
+  await input2.type("Mensaje del Usuario 2", { delay: 100 });
+
+  // Verificar que Usuario 1 ve el mensaje
+  await expect(page1.locator(`text="Mensaje del Usuario 2"`)).toBeVisible({
+    timeout: 5000,
+  });
+  console.log("✅ Usuario 1 ve el mensaje del Usuario 2");
+
+  // Cerrar los contextos
   await context1.close();
   await context2.close();
 });

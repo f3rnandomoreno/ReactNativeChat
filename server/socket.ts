@@ -97,8 +97,8 @@ export function setupSocketServer(httpServer: HTTPServer) {
       console.log(
         `[submit] User ${socket.id} submitting message in room ${currentRoom}`
       );
-      const success = roomManager.submitMessage(socket, currentRoom);
-      console.log(`[submit] Result: ${success ? "allowed" : "blocked"}`);
+      roomManager.submitMessage(socket, currentRoom);
+      console.log(`[submit] Message submitted`);
     });
 
     socket.on("disconnect", () => {
