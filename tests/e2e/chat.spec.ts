@@ -86,7 +86,7 @@ test("chat basic functionality", async ({ page }) => {
   console.log("✅ Mensaje enviado");
 
   // Verificar que el mensaje completo aparece en el chat
-  await expect(page.locator(`text="${message}"`)).toBeVisible({
+  await expect(page.locator(`div.text-xl >> text="${message}"`)).toBeVisible({
     timeout: 5000,
   });
   console.log("✅ Mensaje visible en el chat");
@@ -177,11 +177,21 @@ test("writing blocking between users", async ({ browser }) => {
   await messageInput1.type("Hola", { delay: 100 });
   console.log("✅ Usuario 1 está escribiendo");
 
+  // Esperar un momento para que se propague el estado
+  await page1.waitForTimeout(1000);
+
   // Verificar que el Usuario 2 está bloqueado mientras Usuario 1 escribe
+  // Usamos evaluateHandle para verificar el estado sin cambiar el foco
   console.log(
     "🔵 Verificando que Usuario 2 está bloqueado mientras Usuario 1 escribe"
   );
-  await expect(messageInput2).toBeDisabled();
+  const isDisabled = await page2.evaluate(() => {
+    const input = document.querySelector(
+      '[data-testid="message-input"]'
+    ) as HTMLInputElement;
+    return input?.disabled || false;
+  });
+  expect(isDisabled).toBe(true);
   console.log("✅ Input del Usuario 2 bloqueado durante escritura");
 
   // Verificar mensaje de escritura
