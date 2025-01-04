@@ -18,6 +18,8 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
 
       if (e.key === "Enter") {
         socketClient.submitMessage();
+        socketClient.stopWriting();
+        isWritingRef.current = false;
         return;
       }
     };

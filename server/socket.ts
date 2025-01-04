@@ -185,8 +185,17 @@ export function setupSocketServer(httpServer: HTTPServer) {
 
       const room = rooms.get(currentRoom)!;
       if (room.activeWriter === socket.id) {
-        // Don't clear the writer state here, it will be cleared when another user starts writing
-        room.lastActivity = Date.now(); // Update last activity to prevent timeout
+        // Emit the final message
+        const user = room.users.get(socket.id)!;
+        io.to(currentRoom).emit("message_update", {
+          message: room.currentMessage,
+          color: user.color,
+          writerName: user.name,
+        });
+
+        // Clear writer state to allow others to write
+        room.activeWriter = null;
+        io.to(currentRoom).emit("writer_changed", null);
       }
     });
 
