@@ -20,6 +20,7 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
         socketClient.submitMessage();
         socketClient.stopWriting();
         isWritingRef.current = false;
+        setValue("");
         return;
       }
     };
@@ -46,19 +47,28 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
   }, [isBlocked]);
 
   useEffect(() => {
+    console.log("[MessageInput] isBlocked changed:", isBlocked);
     if (isBlocked) {
       setValue("");
-      isWritingRef.current = false;
+      if (isWritingRef.current) {
+        socketClient.stopWriting();
+        isWritingRef.current = false;
+      }
     }
   }, [isBlocked]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isBlocked) return;
+    if (isBlocked) {
+      console.log("[MessageInput] Change blocked");
+      return;
+    }
 
     const newValue = e.target.value;
+    console.log("[MessageInput] New value:", newValue);
 
     // Iniciar escritura si no está escribiendo
     if (!isWritingRef.current) {
+      console.log("[MessageInput] Starting writing");
       socketClient.startWriting();
       isWritingRef.current = true;
     }

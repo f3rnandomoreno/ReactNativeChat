@@ -28,8 +28,8 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
   useEffect(() => {
     socketClient.joinRoom(roomId, userColor, userName);
 
-    const handleRoomState = (state: { 
-      currentMessage: string; 
+    const handleRoomState = (state: {
+      currentMessage: string;
       activeWriter: string | null;
       lastActivity: number;
       users: Record<string, UserInfo>;
@@ -37,7 +37,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       setCurrentMessage(state.currentMessage);
       setCurrentWriter(
         state.activeWriter
-          ? { 
+          ? {
               writerId: state.activeWriter,
               color: state.users[state.activeWriter].color,
               name: state.users[state.activeWriter].name,
@@ -46,17 +46,33 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       );
       setUsers(state.users);
       if (state.activeWriter) {
-        const remainingTime = Math.max(0, 60 - Math.floor((Date.now() - state.lastActivity) / 1000));
+        const remainingTime = Math.max(
+          0,
+          60 - Math.floor((Date.now() - state.lastActivity) / 1000)
+        );
         setTimeLeft(remainingTime);
       }
     };
 
     const handleWriterChanged = (writer: WriterInfo | null) => {
+      console.log("[handleWriterChanged]", writer);
       setCurrentWriter(writer);
       setTimeLeft(writer ? 60 : null);
+
+      // Si hay un escritor activo y no soy yo, limpiar el mensaje actual
+      if (writer && writer.writerId !== socketClient.getSocketId()) {
+        setCurrentMessage("");
+        setMessageColor("");
+        setWriterName("");
+      }
     };
 
-    const handleMessageUpdate = ({ message, color, writerName }: MessageUpdate) => {
+    const handleMessageUpdate = ({
+      message,
+      color,
+      writerName,
+    }: MessageUpdate) => {
+      console.log("[handleMessageUpdate]", { message, color, writerName });
       setCurrentMessage(message);
       setMessageColor(color);
       setWriterName(writerName);
@@ -65,6 +81,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     };
 
     const handleMessageCleared = () => {
+      console.log("[handleMessageCleared]");
       setCurrentMessage("");
       setCurrentWriter(null);
       setMessageColor("");
@@ -73,14 +90,16 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     };
 
     const handleSystemMessage = (message: string) => {
-      setSystemMessages(prev => [...prev, message]);
+      console.log("[handleSystemMessage]", message);
+      setSystemMessages((prev) => [...prev, message]);
       // Remove message after 5 seconds
       setTimeout(() => {
-        setSystemMessages(prev => prev.filter(msg => msg !== message));
+        setSystemMessages((prev) => prev.filter((msg) => msg !== message));
       }, 5000);
     };
 
     const handleRoomUsersUpdate = (updatedUsers: Record<string, UserInfo>) => {
+      console.log("[handleRoomUsersUpdate]", updatedUsers);
       setUsers(updatedUsers);
     };
 
@@ -93,7 +112,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
 
     // Timer countdown
     const timer = setInterval(() => {
-      setTimeLeft(prev => prev !== null ? Math.max(0, prev - 1) : null);
+      setTimeLeft((prev) => (prev !== null ? Math.max(0, prev - 1) : null));
     }, 1000);
 
     // Cleanup function
@@ -108,7 +127,9 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     };
   }, [userColor, roomId, userName]);
 
-  const isBlocked = currentWriter !== null && currentWriter.writerId !== socketClient.getSocketId();
+  const isBlocked =
+    currentWriter !== null &&
+    currentWriter.writerId !== socketClient.getSocketId();
 
   const copyShareLink = async () => {
     await navigator.clipboard.writeText(shareUrl);
@@ -128,11 +149,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="p-6 space-y-6">
         <div className="flex items-center gap-2">
-          <Input 
-            value={shareUrl}
-            readOnly
-            className="bg-gray-50"
-          />
+          <Input value={shareUrl} readOnly className="bg-gray-50" />
           <Button onClick={copyShareLink}>
             {showCopied ? "¡Copiado!" : "Copiar"}
           </Button>
@@ -140,7 +157,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
 
         {/* System Messages */}
         {systemMessages.map((message, index) => (
-          <div 
+          <div
             key={index}
             className="bg-blue-50 text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2"
           >
@@ -150,16 +167,14 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
         ))}
 
         {/* Current Message */}
-        <div 
+        <div
           className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg"
           style={{ color: messageColor || "inherit" }}
         >
           <div className="text-center">
             {currentMessage || "Empieza a escribir..."}
             {writerName && (
-              <div className="text-sm mt-2 opacity-75">
-                — {writerName}
-              </div>
+              <div className="text-sm mt-2 opacity-75">— {writerName}</div>
             )}
           </div>
         </div>
@@ -185,12 +200,12 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           <h3 className="font-medium mb-2">Usuarios en la sala:</h3>
           <div className="space-y-2">
             {Object.entries(users).map(([userId, user]) => (
-              <div 
+              <div
                 key={userId}
                 className="flex items-center justify-between gap-2 p-2 rounded-lg bg-gray-50"
               >
                 <div className="flex items-center gap-2">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: user.color }}
                   />
@@ -211,16 +226,17 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
                     {user.requestingTurn ? "Turno solicitado" : "Pedir turno"}
                   </Button>
                 )}
-                {currentWriter?.writerId === socketClient.getSocketId() && 
-                 user.requestingTurn && userId !== socketClient.getSocketId() && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => grantTurn(userId)}
-                  >
-                    Dar turno
-                  </Button>
-                )}
+                {currentWriter?.writerId === socketClient.getSocketId() &&
+                  user.requestingTurn &&
+                  userId !== socketClient.getSocketId() && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => grantTurn(userId)}
+                    >
+                      Dar turno
+                    </Button>
+                  )}
               </div>
             ))}
           </div>

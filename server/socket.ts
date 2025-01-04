@@ -1,14 +1,6 @@
 import { Server } from "socket.io";
 import type { Server as HTTPServer } from "http";
-
-interface RoomState {
-  currentMessage: string;
-  activeWriter: string | null;
-  lastActivity: number;
-  users: Map<string, { color: string; name: string; requestingTurn: boolean }>;
-}
-
-const INACTIVITY_TIMEOUT = 60000; // 1 minute in milliseconds
+import { RoomManager } from "./RoomManager";
 
 export function setupSocketServer(httpServer: HTTPServer) {
   const io = new Server(httpServer, {
@@ -18,34 +10,7 @@ export function setupSocketServer(httpServer: HTTPServer) {
     },
   });
 
-  const rooms = new Map<string, RoomState>();
-
-  function emitRoomUsers(roomId: string) {
-    const room = rooms.get(roomId);
-    if (room) {
-      const usersObject = Object.fromEntries(
-        Array.from(room.users.entries()).map(([id, info]) => [id, info])
-      );
-      io.to(roomId).emit("room_users_update", usersObject);
-    }
-  }
-
-  // Check for inactive writers
-  setInterval(() => {
-    rooms.forEach((room, roomId) => {
-      if (
-        room.activeWriter &&
-        Date.now() - room.lastActivity > INACTIVITY_TIMEOUT
-      ) {
-        room.activeWriter = null;
-        io.to(roomId).emit("writer_changed", null);
-        io.to(roomId).emit(
-          "system_message",
-          "Se liberó el turno por inactividad"
-        );
-      }
-    });
-  }, 1000);
+  const roomManager = new RoomManager(io);
 
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
@@ -55,170 +20,91 @@ export function setupSocketServer(httpServer: HTTPServer) {
       // Leave previous room if any
       if (currentRoom) {
         socket.leave(currentRoom);
-        const room = rooms.get(currentRoom);
-        if (room) {
-          room.users.delete(socket.id);
-          emitRoomUsers(currentRoom);
-        }
+        roomManager.leaveRoom(socket, currentRoom);
       }
 
       // Join new room
       currentRoom = roomId;
       socket.join(roomId);
-
-      // Initialize room if needed
-      if (!rooms.has(roomId)) {
-        rooms.set(roomId, {
-          currentMessage: "",
-          activeWriter: null,
-          lastActivity: Date.now(),
-          users: new Map(),
-        });
-      }
-
-      const room = rooms.get(roomId)!;
-      room.users.set(socket.id, { color, name, requestingTurn: false });
-
-      // Convert users Map to an object for client
-      const usersObject = Object.fromEntries(
-        Array.from(room.users.entries()).map(([id, info]) => [id, info])
-      );
-
-      // First emit room state to the joining user
-      socket.emit("room_state", {
-        currentMessage: room.currentMessage,
-        activeWriter: room.activeWriter,
-        lastActivity: room.lastActivity,
-        users: usersObject,
-      });
-
-      // Then emit updated users list to all users in the room
-      emitRoomUsers(roomId);
-
-      // Notify others of new user
-      socket.to(roomId).emit("system_message", `${name} se unió a la sala`);
+      roomManager.joinRoom(socket, roomId, color, name);
     });
 
     socket.on("request_turn", () => {
-      if (!currentRoom) return;
-
-      const room = rooms.get(currentRoom)!;
-      const user = room.users.get(socket.id);
-      if (!user) return;
-
-      user.requestingTurn = true;
-      emitRoomUsers(currentRoom); // Emit updated users list
-      io.to(currentRoom).emit("turn_requested", {
-        userId: socket.id,
-        userName: user.name,
-      });
+      if (!currentRoom) {
+        console.log("[request_turn] No current room");
+        return;
+      }
+      console.log(
+        `[request_turn] User ${socket.id} requesting turn in room ${currentRoom}`
+      );
+      roomManager.requestTurn(socket, currentRoom);
     });
 
     socket.on("grant_turn", (userId: string) => {
-      if (!currentRoom) return;
-
-      const room = rooms.get(currentRoom)!;
-      if (room.activeWriter === socket.id) {
-        room.activeWriter = userId;
-        const user = room.users.get(userId);
-        if (user) {
-          user.requestingTurn = false;
-          emitRoomUsers(currentRoom); // Emit updated users list
-          io.to(currentRoom).emit("writer_changed", {
-            writerId: userId,
-            color: user.color,
-            name: user.name,
-          });
-        }
+      if (!currentRoom) {
+        console.log("[grant_turn] No current room");
+        return;
       }
+      console.log(
+        `[grant_turn] User ${socket.id} granting turn to ${userId} in room ${currentRoom}`
+      );
+      roomManager.grantTurn(socket, currentRoom, userId);
     });
 
     socket.on("start_writing", () => {
-      if (!currentRoom) return;
-
-      const room = rooms.get(currentRoom)!;
-      const user = room.users.get(socket.id)!;
-
-      if (!room.activeWriter || room.activeWriter !== socket.id) {
-        // Clear previous writer's state
-        room.currentMessage = "";
-        room.activeWriter = socket.id;
-        io.to(currentRoom).emit("message_cleared");
+      if (!currentRoom) {
+        console.log("[start_writing] No current room");
+        return;
       }
-
-      // Always emit writer_changed to ensure the UI shows the writing state
-      io.to(currentRoom).emit("writer_changed", {
-        writerId: socket.id,
-        color: user.color,
-        name: user.name,
-      });
-    });
-
-    socket.on("stop_writing", () => {
-      if (!currentRoom) return;
-
-      const room = rooms.get(currentRoom)!;
-      if (room.activeWriter === socket.id) {
-        room.activeWriter = null;
-        io.to(currentRoom).emit("writer_changed", null);
-      }
+      console.log(
+        `[start_writing] User ${socket.id} attempting to write in room ${currentRoom}`
+      );
+      const success = roomManager.startWriting(socket, currentRoom);
+      console.log(`[start_writing] Result: ${success ? "allowed" : "blocked"}`);
     });
 
     socket.on("update_message", (message: string) => {
-      if (!currentRoom) return;
-
-      const room = rooms.get(currentRoom)!;
-      if (room.activeWriter === socket.id) {
-        room.lastActivity = Date.now();
-        room.currentMessage = message;
-        const user = room.users.get(socket.id)!;
-        io.to(currentRoom).emit("message_update", {
-          message: room.currentMessage,
-          color: user.color,
-          writerName: user.name,
-        });
+      if (!currentRoom) {
+        console.log("[update_message] No current room");
+        return;
       }
+      console.log(
+        `[update_message] User ${socket.id} updating message in room ${currentRoom}`
+      );
+      const success = roomManager.updateMessage(socket, currentRoom, message);
+      console.log(
+        `[update_message] Result: ${success ? "allowed" : "blocked"}`
+      );
+    });
+
+    socket.on("stop_writing", () => {
+      if (!currentRoom) {
+        console.log("[stop_writing] No current room");
+        return;
+      }
+      console.log(
+        `[stop_writing] User ${socket.id} stopping writing in room ${currentRoom}`
+      );
+      const success = roomManager.stopWriting(socket, currentRoom);
+      console.log(`[stop_writing] Result: ${success ? "allowed" : "blocked"}`);
     });
 
     socket.on("submit", () => {
-      if (!currentRoom) return;
-
-      const room = rooms.get(currentRoom)!;
-      if (room.activeWriter === socket.id) {
-        // Emit the final message
-        const user = room.users.get(socket.id)!;
-        io.to(currentRoom).emit("message_update", {
-          message: room.currentMessage,
-          color: user.color,
-          writerName: user.name,
-        });
-
-        // Clear writer state to allow others to write
-        room.activeWriter = null;
-        io.to(currentRoom).emit("writer_changed", null);
+      if (!currentRoom) {
+        console.log("[submit] No current room");
+        return;
       }
+      console.log(
+        `[submit] User ${socket.id} submitting message in room ${currentRoom}`
+      );
+      const success = roomManager.submitMessage(socket, currentRoom);
+      console.log(`[submit] Result: ${success ? "allowed" : "blocked"}`);
     });
 
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
       if (currentRoom) {
-        const room = rooms.get(currentRoom);
-        if (room) {
-          const user = room.users.get(socket.id);
-          room.users.delete(socket.id);
-          if (room.activeWriter === socket.id) {
-            room.activeWriter = null;
-            io.to(currentRoom).emit("writer_changed", null);
-          }
-          if (user) {
-            io.to(currentRoom).emit(
-              "system_message",
-              `${user.name} dejó la sala`
-            );
-          }
-          // Emit updated users list after user disconnects
-          emitRoomUsers(currentRoom);
-        }
+        roomManager.leaveRoom(socket, currentRoom);
       }
     });
   });

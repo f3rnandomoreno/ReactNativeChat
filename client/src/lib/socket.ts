@@ -12,69 +12,90 @@ class SocketClient {
     });
 
     this.socket.on("connect", () => {
-      console.log("Connected to server");
+      console.log("[SocketClient] Connected to server");
       this.socketId = this.socket.id;
+      // @ts-ignore
+      window.socketConnected = true;
     });
 
     this.socket.on("disconnect", () => {
-      console.log("Disconnected from server");
+      console.log("[SocketClient] Disconnected from server");
       this.socketId = null;
+      // @ts-ignore
+      window.socketConnected = false;
     });
 
     this.socket.on("room_state", (state: RoomState) => {
+      console.log("[SocketClient] Room state received:", state);
       this.emit("roomState", state);
     });
 
     this.socket.on("writer_changed", (writer: WriterInfo | null) => {
+      console.log("[SocketClient] Writer changed:", writer);
       this.emit("writerChanged", writer);
     });
 
     this.socket.on("message_update", (update: MessageUpdate) => {
+      console.log("[SocketClient] Message update:", update);
       this.emit("messageUpdate", update);
     });
 
     this.socket.on("message_cleared", () => {
+      console.log("[SocketClient] Message cleared");
       this.emit("messageCleared");
     });
 
     this.socket.on("system_message", (message: string) => {
+      console.log("[SocketClient] System message:", message);
       this.emit("system_message", message);
     });
 
-    this.socket.on("turn_requested", (data: { userId: string; userName: string }) => {
-      this.emit("turn_requested", data);
-    });
+    this.socket.on(
+      "turn_requested",
+      (data: { userId: string; userName: string }) => {
+        console.log("[SocketClient] Turn requested:", data);
+        this.emit("turn_requested", data);
+      }
+    );
 
     this.socket.on("room_users_update", (users: Record<string, any>) => {
+      console.log("[SocketClient] Room users update:", users);
       this.emit("room_users_update", users);
     });
   }
 
   joinRoom(roomId: string, color: string, name: string) {
+    console.log("[SocketClient] Joining room:", { roomId, color, name });
     this.socket.emit("join_room", { roomId, color, name });
   }
 
   startWriting() {
+    console.log("[SocketClient] Starting writing");
     this.socket.emit("start_writing");
   }
 
   stopWriting() {
+    console.log("[SocketClient] Stopping writing");
     this.socket.emit("stop_writing");
   }
 
   updateMessage(message: string) {
+    console.log("[SocketClient] Updating message:", message);
     this.socket.emit("update_message", message);
   }
 
   submitMessage() {
+    console.log("[SocketClient] Submitting message");
     this.socket.emit("submit");
   }
 
   requestTurn() {
+    console.log("[SocketClient] Requesting turn");
     this.socket.emit("request_turn");
   }
 
   grantTurn(userId: string) {
+    console.log("[SocketClient] Granting turn to:", userId);
     this.socket.emit("grant_turn", userId);
   }
 
