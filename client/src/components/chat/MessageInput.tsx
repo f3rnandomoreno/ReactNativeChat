@@ -13,13 +13,12 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
   const previousValueRef = useRef("");
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       if (isBlocked) return;
 
       if (e.key === "Enter") {
+        stopWriting();
         socketClient.submitMessage();
-        socketClient.stopWriting();
-        isWritingRef.current = false;
         setValue("");
         return;
       }
@@ -27,8 +26,7 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
 
     const handleBlur = () => {
       if (isWritingRef.current) {
-        socketClient.stopWriting();
-        isWritingRef.current = false;
+        stopWriting();
       }
     };
 
@@ -37,43 +35,52 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("blur", handleBlur);
+      stopWriting();
     };
-  }, [isBlocked]);
-
-  useEffect(() => {
-    if (!isBlocked && inputRef.current) {
-      inputRef.current.focus();
-    }
   }, [isBlocked]);
 
   useEffect(() => {
     console.log("[MessageInput] isBlocked changed:", isBlocked);
     if (isBlocked) {
       setValue("");
-      if (isWritingRef.current) {
-        socketClient.stopWriting();
-        isWritingRef.current = false;
+      stopWriting();
+      if (inputRef.current) {
+        inputRef.current.blur();
       }
+    } else if (inputRef.current) {
+      inputRef.current.focus();
     }
   }, [isBlocked]);
+
+  const stopWriting = () => {
+    if (isWritingRef.current) {
+      socketClient.stopWriting();
+      isWritingRef.current = false;
+    }
+  };
+
+  const startWriting = () => {
+    if (!isWritingRef.current && !isBlocked) {
+      console.log("[MessageInput] Starting writing");
+      socketClient.startWriting();
+      isWritingRef.current = true;
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isBlocked) {
       console.log("[MessageInput] Change blocked");
+      e.preventDefault();
       return;
     }
 
     const newValue = e.target.value;
     console.log("[MessageInput] New value:", newValue);
 
-    // Iniciar escritura si no está escribiendo
     if (!isWritingRef.current) {
-      console.log("[MessageInput] Starting writing");
-      socketClient.startWriting();
-      isWritingRef.current = true;
+      startWriting();
     }
 
-    // Actualizar el mensaje completo
     socketClient.updateMessage(newValue);
     previousValueRef.current = newValue;
     setValue(newValue);
@@ -87,6 +94,7 @@ export function MessageInput({ isBlocked }: MessageInputProps) {
       placeholder={isBlocked ? "Espera tu turno..." : "Escribe tu mensaje..."}
       disabled={isBlocked}
       className="text-lg"
+      data-testid="message-input"
     />
   );
 }

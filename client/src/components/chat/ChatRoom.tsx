@@ -34,30 +34,26 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       lastActivity: number;
       users: Record<string, UserInfo>;
     }) => {
+      console.log("[handleRoomState]", state);
       setCurrentMessage(state.currentMessage);
-      setCurrentWriter(
-        state.activeWriter
-          ? {
-              writerId: state.activeWriter,
-              color: state.users[state.activeWriter].color,
-              name: state.users[state.activeWriter].name,
-            }
-          : null
-      );
       setUsers(state.users);
+
+      // Actualizar el escritor actual basado en el estado de la sala
       if (state.activeWriter) {
-        const remainingTime = Math.max(
-          0,
-          60 - Math.floor((Date.now() - state.lastActivity) / 1000)
-        );
-        setTimeLeft(remainingTime);
+        const writer = {
+          writerId: state.activeWriter,
+          color: state.users[state.activeWriter].color,
+          name: state.users[state.activeWriter].name,
+        };
+        setCurrentWriter(writer);
+      } else {
+        setCurrentWriter(null);
       }
     };
 
     const handleWriterChanged = (writer: WriterInfo | null) => {
       console.log("[handleWriterChanged]", writer);
       setCurrentWriter(writer);
-      setTimeLeft(writer ? 60 : null);
 
       // Si hay un escritor activo y no soy yo, limpiar el mensaje actual
       if (writer && writer.writerId !== socketClient.getSocketId()) {
@@ -182,10 +178,16 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
         {/* Active Writer and Timer */}
         <div className="relative">
           <MessageInput isBlocked={isBlocked} />
-          <div className="absolute -top-6 left-2 text-sm flex items-center gap-4">
-            <span style={{ color: currentWriter?.color }}>
-              {currentWriter ? `${currentWriter.name} está escribiendo...` : ""}
-            </span>
+          <div className="text-sm py-2 flex items-center gap-4">
+            {currentWriter && (
+              <span
+                data-testid="writing-indicator"
+                className="text-base"
+                style={{ color: currentWriter.color }}
+              >
+                {`${currentWriter.name} está escribiendo...`}
+              </span>
+            )}
             {timeLeft !== null && timeLeft < 30 && (
               <span className="flex items-center gap-1 text-orange-500">
                 <Clock className="h-4 w-4" />
