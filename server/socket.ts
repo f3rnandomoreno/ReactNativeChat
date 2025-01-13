@@ -17,11 +17,8 @@ export function setupSocketServer(httpServer: HTTPServer) {
     let currentRoom: string | null = null;
 
     socket.on("join_room", ({ roomId, color, name }) => {
-      console.log(`[join_room] User ${socket.id} joining room ${roomId}`);
-
       // Leave previous room if any
       if (currentRoom) {
-        console.log(`[join_room] Leaving previous room ${currentRoom}`);
         socket.leave(currentRoom);
         roomManager.leaveRoom(socket, currentRoom);
       }
@@ -32,21 +29,14 @@ export function setupSocketServer(httpServer: HTTPServer) {
       roomManager.joinRoom(socket, roomId, color, name);
     });
 
-    socket.on("leave_room", (roomId: string) => {
-      console.log(`[leave_room] User ${socket.id} leaving room ${roomId}`);
-      if (currentRoom === roomId) {
-        socket.leave(roomId);
-        roomManager.leaveRoom(socket, roomId);
-        currentRoom = null;
-      }
-    });
-
     socket.on("request_turn", () => {
       if (!currentRoom) {
         console.log("[request_turn] No current room");
         return;
       }
-      console.log(`[request_turn] User ${socket.id} requesting turn in room ${currentRoom}`);
+      console.log(
+        `[request_turn] User ${socket.id} requesting turn in room ${currentRoom}`
+      );
       roomManager.requestTurn(socket, currentRoom);
     });
 
@@ -55,7 +45,9 @@ export function setupSocketServer(httpServer: HTTPServer) {
         console.log("[grant_turn] No current room");
         return;
       }
-      console.log(`[grant_turn] User ${socket.id} granting turn to ${userId} in room ${currentRoom}`);
+      console.log(
+        `[grant_turn] User ${socket.id} granting turn to ${userId} in room ${currentRoom}`
+      );
       roomManager.grantTurn(socket, currentRoom, userId);
     });
 
@@ -64,7 +56,9 @@ export function setupSocketServer(httpServer: HTTPServer) {
         console.log("[start_writing] No current room");
         return;
       }
-      console.log(`[start_writing] User ${socket.id} attempting to write in room ${currentRoom}`);
+      console.log(
+        `[start_writing] User ${socket.id} attempting to write in room ${currentRoom}`
+      );
       const success = roomManager.startWriting(socket, currentRoom);
       console.log(`[start_writing] Result: ${success ? "allowed" : "blocked"}`);
     });
@@ -74,9 +68,13 @@ export function setupSocketServer(httpServer: HTTPServer) {
         console.log("[update_message] No current room");
         return;
       }
-      console.log(`[update_message] User ${socket.id} updating message in room ${currentRoom}`);
+      console.log(
+        `[update_message] User ${socket.id} updating message in room ${currentRoom}`
+      );
       const success = roomManager.updateMessage(socket, currentRoom, message);
-      console.log(`[update_message] Result: ${success ? "allowed" : "blocked"}`);
+      console.log(
+        `[update_message] Result: ${success ? "allowed" : "blocked"}`
+      );
     });
 
     socket.on("stop_writing", () => {
@@ -84,7 +82,9 @@ export function setupSocketServer(httpServer: HTTPServer) {
         console.log("[stop_writing] No current room");
         return;
       }
-      console.log(`[stop_writing] User ${socket.id} stopping writing in room ${currentRoom}`);
+      console.log(
+        `[stop_writing] User ${socket.id} stopping writing in room ${currentRoom}`
+      );
       const success = roomManager.stopWriting(socket, currentRoom);
       console.log(`[stop_writing] Result: ${success ? "allowed" : "blocked"}`);
     });
@@ -94,7 +94,9 @@ export function setupSocketServer(httpServer: HTTPServer) {
         console.log("[submit] No current room");
         return;
       }
-      console.log(`[submit] User ${socket.id} submitting message in room ${currentRoom}`);
+      console.log(
+        `[submit] User ${socket.id} submitting message in room ${currentRoom}`
+      );
       roomManager.submitMessage(socket, currentRoom);
       console.log(`[submit] Message submitted`);
     });
