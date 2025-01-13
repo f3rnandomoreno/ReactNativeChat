@@ -12,7 +12,7 @@ function generateRoomId() {
 
 function App() {
   const [userColor, setUserColor] = useState<string>();
-  const [userName, setUserName] = useState<string>();
+  const [userName, setUserName] = useState<string>(() => localStorage.getItem("userName") || "");
   const [, setLocation] = useLocation();
 
   const handleColorSelected = (color: string) => {

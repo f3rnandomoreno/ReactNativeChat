@@ -8,11 +8,12 @@ interface NameInputProps {
 }
 
 export function NameInput({ onNameSubmit }: NameInputProps) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(() => localStorage.getItem("userName") || "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
+      localStorage.setItem("userName", name.trim());
       onNameSubmit(name.trim());
     }
   };
