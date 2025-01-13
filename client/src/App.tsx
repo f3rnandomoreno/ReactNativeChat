@@ -32,17 +32,6 @@ function App() {
     localStorage.setItem("userColor", newColor);
   };
 
-  if (!userName) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <AppBar />
-        <div className="flex-1 p-4 flex items-center justify-center">
-          <WelcomeScreen onNameSubmit={setUserName} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Switch>
@@ -50,11 +39,15 @@ function App() {
           <>
             <AppBar />
             <div className="flex-1 p-4 flex items-center justify-center">
-              {userColor ? (
+              {!userName ? (
+                <WelcomeScreen onNameSubmit={setUserName} />
+              ) : !userColor ? (
+                <ColorPicker onColorSelected={handleColorSelected} />
+              ) : (
                 <div className="w-full max-w-2xl space-y-6">
                   <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
                     <CardContent className="p-6 text-center space-y-4">
-                      <h2 className="text-3xl font-bold">Nueva Conversación</h2>
+                      <h2 className="text-3xl font-bold">Nueva Conversación en RealtimeChat</h2>
                       <p className="text-gray-600">
                         Inicia una nueva conversación en tiempo real
                       </p>
@@ -74,8 +67,6 @@ function App() {
                     </CardContent>
                   </Card>
                 </div>
-              ) : (
-                <ColorPicker onColorSelected={handleColorSelected} />
               )}
             </div>
           </>
@@ -94,7 +85,12 @@ function App() {
               </div>
             </>
           ) : (
-            <ColorPicker onColorSelected={setUserColor} />
+            <>
+              <AppBar />
+              <div className="flex-1 p-4 flex items-center justify-center">
+                <ColorPicker onColorSelected={handleColorSelected} />
+              </div>
+            </>
           )}
         </Route>
       </Switch>

@@ -16,7 +16,7 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
     <div className="w-full space-y-6">
       <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
         <CardContent className="p-6 text-center space-y-4">
-          <h2 className="text-3xl font-bold">¡Bienvenido!</h2>
+          <h2 className="text-3xl font-bold">¡Bienvenido a RealtimeChat!</h2>
           <p className="text-gray-600">
             Conecta y chatea con otros usuarios en tiempo real
           </p>
@@ -69,6 +69,7 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
                     <li>Indicadores de estado de los usuarios</li>
                     <li>Notificaciones de entrada y salida</li>
                     <li>Interfaz intuitiva y responsive</li>
+                    <li>Diseño eco-consciente y eficiente</li>
                   </ul>
                 </div>
               </div>
