@@ -42,7 +42,10 @@ function App() {
               {!userName ? (
                 <WelcomeScreen onNameSubmit={setUserName} />
               ) : !userColor ? (
-                <ColorPicker onColorSelected={handleColorSelected} />
+                <>
+                  <AppBar />
+                  <ColorPicker onColorSelected={handleColorSelected} />
+                </>
               ) : (
                 <div className="w-full max-w-2xl space-y-6">
                   <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
