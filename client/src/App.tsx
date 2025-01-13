@@ -11,13 +11,23 @@ function generateRoomId() {
 }
 
 function App() {
-  const [userColor, setUserColor] = useState<string>();
-  const [userName, setUserName] = useState<string>(() => localStorage.getItem("userName") || "");
+  const [userColor, setUserColor] = useState<string>(() => 
+    localStorage.getItem("userColor") || ""
+  );
+  const [userName, setUserName] = useState<string>(() => 
+    localStorage.getItem("userName") || ""
+  );
   const [, setLocation] = useLocation();
 
   const handleColorSelected = (color: string) => {
     setUserColor(color);
+    localStorage.setItem("userColor", color);
     setLocation(`/room/${generateRoomId()}`);
+  };
+
+  const handleColorChange = (newColor: string) => {
+    setUserColor(newColor);
+    localStorage.setItem("userColor", newColor);
   };
 
   if (!userName) {
@@ -50,6 +60,7 @@ function App() {
               userColor={userColor} 
               roomId={params.roomId} 
               userName={userName}
+              onColorChange={handleColorChange}
             />
           ) : (
             <ColorPicker onColorSelected={setUserColor} />

@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageInput } from "./MessageInput";
+import { SettingsMenu } from "./SettingsMenu";
 import { socketClient } from "@/lib/socket";
 import type { WriterInfo, MessageUpdate, UserInfo } from "@/lib/types";
 import { AlertCircle, Clock } from "lucide-react";
@@ -11,9 +12,10 @@ interface ChatRoomProps {
   userColor: string;
   roomId: string;
   userName: string;
+  onColorChange?: (color: string) => void;
 }
 
-export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
+export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoomProps) {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messageColor, setMessageColor] = useState("");
   const [writerName, setWriterName] = useState("");
@@ -28,18 +30,17 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     color: string;
     author: string;
   } | null>(null);
+  const [currentUserName, setCurrentUserName] = useState(userName);
 
   const shareUrl = `${window.location.origin}/room/${roomId}`;
 
   useEffect(() => {
-    // Función para conectar y unirse a la sala
     const connectAndJoin = () => {
       console.log("[ChatRoom] Connecting and joining room...");
       socketClient.connect();
-      socketClient.joinRoom(roomId, userColor, userName);
+      socketClient.joinRoom(roomId, userColor, currentUserName);
     };
 
-    // Manejador de visibilidad
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         console.log("[ChatRoom] Window became visible, reconnecting...");
@@ -47,10 +48,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       }
     };
 
-    // Iniciar conexión
     connectAndJoin();
-
-    // Suscribirse al evento de visibilidad
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const handleRoomState = (state: {
@@ -162,12 +160,24 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(timer);
     };
-  }, [userColor, roomId, userName]);
+  }, [userColor, roomId, currentUserName]);
 
   const copyShareLink = async () => {
     await navigator.clipboard.writeText(shareUrl);
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 2000);
+  };
+
+  const handleNameChange = (newName: string) => {
+    setCurrentUserName(newName);
+    socketClient.joinRoom(roomId, userColor, newName);
+  };
+
+  const handleColorChange = (newColor: string) => {
+    if (onColorChange) {
+      onColorChange(newColor);
+    }
+    socketClient.joinRoom(roomId, newColor, currentUserName);
   };
 
   const requestTurn = () => {
@@ -181,11 +191,19 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="p-6 space-y-6">
-        <div className="flex items-center gap-2">
-          <Input value={shareUrl} readOnly className="bg-gray-50" />
-          <Button onClick={copyShareLink}>
-            {showCopied ? "¡Copiado!" : "Copiar"}
-          </Button>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1">
+            <Input value={shareUrl} readOnly className="bg-gray-50" />
+            <Button onClick={copyShareLink}>
+              {showCopied ? "¡Copiado!" : "Copiar"}
+            </Button>
+          </div>
+          <SettingsMenu
+            currentName={currentUserName}
+            currentColor={userColor}
+            onNameChange={handleNameChange}
+            onColorChange={handleColorChange}
+          />
         </div>
 
         {systemMessages.map((message, index) => (
