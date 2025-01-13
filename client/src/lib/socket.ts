@@ -2,18 +2,27 @@ import { io, Socket } from "socket.io-client";
 import type { RoomState, WriterInfo, MessageUpdate } from "./types";
 
 class SocketClient {
-  private socket: Socket;
+  private socket: Socket | null = null;
   private handlers: Map<string, Function[]> = new Map();
   public socketId: string | null = null;
 
   constructor() {
+    this.setupSocket();
+  }
+
+  private setupSocket() {
+    if (this.socket) {
+      return;
+    }
+
     this.socket = io(window.location.origin, {
       transports: ["websocket"],
+      autoConnect: false, // No conectar automáticamente
     });
 
     this.socket.on("connect", () => {
       console.log("[SocketClient] Connected to server");
-      this.socketId = this.socket.id;
+      this.socketId = this.socket?.id || null;
       // @ts-ignore
       window.socketConnected = true;
     });
@@ -64,43 +73,58 @@ class SocketClient {
     });
   }
 
+  connect() {
+    console.log("[SocketClient] Connecting...");
+    this.setupSocket();
+    this.socket?.connect();
+  }
+
+  disconnect() {
+    console.log("[SocketClient] Disconnecting...");
+    this.socket?.disconnect();
+  }
+
   joinRoom(roomId: string, color: string, name: string) {
     console.log("[SocketClient] Joining room:", { roomId, color, name });
-    this.socket.emit("join_room", { roomId, color, name });
+    if (!this.socket?.connected) {
+      console.log("[SocketClient] Socket not connected, connecting first...");
+      this.connect();
+    }
+    this.socket?.emit("join_room", { roomId, color, name });
   }
 
   startWriting() {
     console.log("[SocketClient] Starting writing");
-    this.socket.emit("start_writing");
+    this.socket?.emit("start_writing");
   }
 
   stopWriting() {
     console.log("[SocketClient] Stopping writing");
-    this.socket.emit("stop_writing");
+    this.socket?.emit("stop_writing");
   }
 
   updateMessage(message: string) {
     console.log("[SocketClient] Updating message:", message);
-    this.socket.emit("update_message", message);
+    this.socket?.emit("update_message", message);
   }
 
   submitMessage() {
     console.log("[SocketClient] Submitting message");
-    this.socket.emit("submit");
+    this.socket?.emit("submit");
   }
 
   requestTurn() {
     console.log("[SocketClient] Requesting turn");
-    this.socket.emit("request_turn");
+    this.socket?.emit("request_turn");
   }
 
   grantTurn(userId: string) {
     console.log("[SocketClient] Granting turn to:", userId);
-    this.socket.emit("grant_turn", userId);
+    this.socket?.emit("grant_turn", userId);
   }
 
   getSocketId() {
-    return this.socket.id;
+    return this.socket?.id || null;
   }
 
   on(event: string, handler: Function) {

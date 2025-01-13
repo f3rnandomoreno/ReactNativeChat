@@ -32,7 +32,26 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
   const shareUrl = `${window.location.origin}/room/${roomId}`;
 
   useEffect(() => {
-    socketClient.joinRoom(roomId, userColor, userName);
+    // Función para conectar y unirse a la sala
+    const connectAndJoin = () => {
+      console.log("[ChatRoom] Connecting and joining room...");
+      socketClient.connect();
+      socketClient.joinRoom(roomId, userColor, userName);
+    };
+
+    // Manejador de visibilidad
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        console.log("[ChatRoom] Window became visible, reconnecting...");
+        connectAndJoin();
+      }
+    };
+
+    // Iniciar conexión
+    connectAndJoin();
+
+    // Suscribirse al evento de visibilidad
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const handleRoomState = (state: {
       currentMessage: string;
@@ -44,7 +63,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       setCurrentMessage(state.currentMessage);
       setUsers(state.users);
 
-      // Actualizar el escritor actual basado en el estado de la sala
       if (state.activeWriter) {
         const writer = {
           writerId: state.activeWriter,
@@ -52,7 +70,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           name: state.users[state.activeWriter].name,
         };
         setCurrentWriter(writer);
-        // Si el escritor activo no soy yo, asegurar que estoy bloqueado
         if (writer.writerId !== socketClient.getSocketId()) {
           setIsBlocked(true);
         }
@@ -65,12 +82,9 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     const handleWriterChanged = (writer: WriterInfo | null) => {
       console.log("[handleWriterChanged]", writer);
 
-      // Solo limpiar el mensaje si:
-      // 1. Se liberó el escritor (writer es null)
-      // 2. El escritor cambió a uno diferente
       if (
-        !writer || // Se liberó el escritor
-        (currentWriter && writer && currentWriter.writerId !== writer.writerId) // Cambio de escritor
+        !writer ||
+        (currentWriter && writer && currentWriter.writerId !== writer.writerId)
       ) {
         console.log(
           "[handleWriterChanged] Limpiando mensaje por cambio de escritor"
@@ -81,7 +95,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       }
 
       setCurrentWriter(writer);
-      // Actualizar el estado de bloqueo basado en el nuevo escritor
       setIsBlocked(
         writer !== null && writer.writerId !== socketClient.getSocketId()
       );
@@ -97,7 +110,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       setMessageColor(color);
       setWriterName(writerName);
 
-      // Si no hay escritor activo, guardar como último mensaje
       if (!currentWriter) {
         setLastMessage({
           text: message,
@@ -119,7 +131,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     const handleSystemMessage = (message: string) => {
       console.log("[handleSystemMessage]", message);
       setSystemMessages((prev) => [...prev, message]);
-      // Remove message after 5 seconds
       setTimeout(() => {
         setSystemMessages((prev) => prev.filter((msg) => msg !== message));
       }, 5000);
@@ -137,12 +148,10 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
     socketClient.on("system_message", handleSystemMessage);
     socketClient.on("room_users_update", handleRoomUsersUpdate);
 
-    // Timer countdown
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev !== null ? Math.max(0, prev - 1) : null));
     }, 1000);
 
-    // Cleanup function
     return () => {
       socketClient.off("roomState", handleRoomState);
       socketClient.off("writerChanged", handleWriterChanged);
@@ -150,6 +159,7 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
       socketClient.off("messageCleared", handleMessageCleared);
       socketClient.off("system_message", handleSystemMessage);
       socketClient.off("room_users_update", handleRoomUsersUpdate);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(timer);
     };
   }, [userColor, roomId, userName]);
@@ -178,7 +188,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </Button>
         </div>
 
-        {/* System Messages */}
         {systemMessages.map((message, index) => (
           <div
             key={index}
@@ -189,7 +198,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </div>
         ))}
 
-        {/* Current Message */}
         <div
           className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg"
           style={{ color: messageColor || "inherit" }}
@@ -215,7 +223,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </div>
         </div>
 
-        {/* Active Writer and Timer */}
         <div className="relative">
           <MessageInput isBlocked={isBlocked} />
           <div className="text-sm py-2 flex items-center gap-4">
@@ -237,7 +244,6 @@ export function ChatRoom({ userColor, roomId, userName }: ChatRoomProps) {
           </div>
         </div>
 
-        {/* Users List and Turn Management */}
         <div className="border-t pt-4 mt-4">
           <h3 className="font-medium mb-2">Usuarios en la sala:</h3>
           <div className="space-y-2">
