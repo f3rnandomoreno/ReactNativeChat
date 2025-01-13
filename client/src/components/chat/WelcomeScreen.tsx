@@ -88,6 +88,17 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
                     <li>Interfaz intuitiva y responsive</li>
                   </ul>
                 </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Compromiso Ambiental</h3>
+                  <ul className="list-disc list-inside space-y-2 text-sm">
+                    <li>Diseño eficiente sin uso de bases de datos</li>
+                    <li>Optimización de recursos para menor consumo energético</li>
+                    <li>Comunicación directa para reducir emisiones de CO2</li>
+                    <li>Contribución activa contra el calentamiento global</li>
+                    <li>Arquitectura ligera y sostenible</li>
+                  </ul>
+                </div>
               </div>
             )}
           </div>
