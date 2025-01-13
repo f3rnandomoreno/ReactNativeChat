@@ -5,6 +5,7 @@ import { ChatRoom } from "@/components/chat/ChatRoom";
 import { WelcomeScreen } from "@/components/chat/WelcomeScreen";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FeatureIcons } from "@/components/chat/FeatureIcons";
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8);
@@ -39,17 +40,31 @@ function App() {
       <Switch>
         <Route path="/">
           {userColor ? (
-            <Card className="w-full max-w-md">
-              <CardContent className="p-6 space-y-4">
-                <h1 className="text-2xl font-bold">Crear una sala nueva</h1>
-                <Button 
-                  className="w-full"
-                  onClick={() => setLocation(`/room/${generateRoomId()}`)}
-                >
-                  Crear Sala
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="w-full max-w-2xl space-y-6">
+              <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
+                <CardContent className="p-6 text-center space-y-4">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Crear Nueva Sala
+                  </h1>
+                  <p className="text-gray-600 text-lg">
+                    Inicia una nueva conversación en tiempo real
+                  </p>
+                </CardContent>
+              </Card>
+
+              <FeatureIcons />
+
+              <Card>
+                <CardContent className="p-6">
+                  <Button 
+                    className="w-full"
+                    onClick={() => setLocation(`/room/${generateRoomId()}`)}
+                  >
+                    Crear Sala
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           ) : (
             <ColorPicker onColorSelected={handleColorSelected} />
           )}
