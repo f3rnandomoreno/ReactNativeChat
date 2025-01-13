@@ -24,6 +24,7 @@ export function SettingsMenu({
 }: SettingsMenuProps) {
   const [name, setName] = useState(currentName);
   const [color, setColor] = useState(currentColor);
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,10 +36,11 @@ export function SettingsMenu({
       localStorage.setItem("userColor", color);
       onColorChange(color);
     }
+    setOpen(false); // Cerrar el popover después de guardar
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <Settings className="h-4 w-4" />
