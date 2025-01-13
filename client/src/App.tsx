@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { ColorPicker } from "@/components/chat/ColorPicker";
 import { ChatRoom } from "@/components/chat/ChatRoom";
@@ -17,15 +17,17 @@ function App() {
   const [userName, setUserName] = useState<string>("");
   const [, setLocation] = useLocation();
 
+  const handleNameSubmit = (name: string) => {
+    setUserName(name);
+  };
+
   const handleColorSelected = (color: string) => {
     setUserColor(color);
-    localStorage.setItem("userColor", color);
     setLocation(`/room/${generateRoomId()}`);
   };
 
   const handleColorChange = (newColor: string) => {
     setUserColor(newColor);
-    localStorage.setItem("userColor", newColor);
   };
 
   return (
@@ -36,16 +38,16 @@ function App() {
             <AppBar />
             <div className="flex-1 p-4 flex items-center justify-center">
               {!userName ? (
-                <WelcomeScreen onNameSubmit={setUserName} />
+                <WelcomeScreen onNameSubmit={handleNameSubmit} />
               ) : !userColor ? (
                 <ColorPicker onColorSelected={handleColorSelected} />
               ) : (
                 <div className="w-full max-w-2xl space-y-6">
                   <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
                     <CardContent className="p-6 text-center space-y-4">
-                      <h2 className="text-3xl font-bold">Nueva Conversación en RealtimeChat</h2>
+                      <h2 className="text-3xl font-bold">Nueva Conversación</h2>
                       <p className="text-gray-600">
-                        Inicia una nueva conversación en tiempo real
+                        Inicia una nueva conversación en tiempo real como {userName}
                       </p>
                     </CardContent>
                   </Card>
@@ -68,26 +70,37 @@ function App() {
           </>
         </Route>
         <Route path="/room/:roomId">
-          {params => userColor ? (
-            <>
-              <AppBar showBackButton />
-              <div className="flex-1 p-4 flex items-center justify-center">
-                <ChatRoom 
-                  userColor={userColor} 
-                  roomId={params.roomId} 
-                  userName={userName}
-                  onColorChange={handleColorChange}
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <AppBar />
-              <div className="flex-1 p-4 flex items-center justify-center">
-                <ColorPicker onColorSelected={handleColorSelected} />
-              </div>
-            </>
-          )}
+          {params => {
+            if (!userName) {
+              setLocation("/");
+              return null;
+            }
+
+            if (!userColor) {
+              return (
+                <>
+                  <AppBar />
+                  <div className="flex-1 p-4 flex items-center justify-center">
+                    <ColorPicker onColorSelected={handleColorSelected} />
+                  </div>
+                </>
+              );
+            }
+
+            return (
+              <>
+                <AppBar showBackButton />
+                <div className="flex-1 p-4 flex items-center justify-center">
+                  <ChatRoom 
+                    userColor={userColor} 
+                    roomId={params.roomId} 
+                    userName={userName}
+                    onColorChange={handleColorChange}
+                  />
+                </div>
+              </>
+            );
+          }}
         </Route>
       </Switch>
     </div>

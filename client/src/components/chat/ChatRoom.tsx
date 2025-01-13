@@ -23,7 +23,6 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
   const [showCopied, setShowCopied] = useState(false);
   const [systemMessages, setSystemMessages] = useState<string[]>([]);
   const [users, setUsers] = useState<Record<string, UserInfo>>({});
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [lastMessage, setLastMessage] = useState<{
     text: string;
@@ -79,30 +78,17 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
 
     const handleWriterChanged = (writer: WriterInfo | null) => {
       console.log("[handleWriterChanged]", writer);
-
-      if (
-        !writer ||
-        (currentWriter && writer && currentWriter.writerId !== writer.writerId)
-      ) {
-        console.log(
-          "[handleWriterChanged] Limpiando mensaje por cambio de escritor"
-        );
+      if (!writer || (currentWriter && writer && currentWriter.writerId !== writer.writerId)) {
         setCurrentMessage("");
         setMessageColor("");
         setWriterName("");
       }
 
       setCurrentWriter(writer);
-      setIsBlocked(
-        writer !== null && writer.writerId !== socketClient.getSocketId()
-      );
+      setIsBlocked(writer !== null && writer.writerId !== socketClient.getSocketId());
     };
 
-    const handleMessageUpdate = ({
-      message,
-      color,
-      writerName,
-    }: MessageUpdate) => {
+    const handleMessageUpdate = ({ message, color, writerName }: MessageUpdate) => {
       console.log("[handleMessageUpdate]", { message, color, writerName });
       setCurrentMessage(message);
       setMessageColor(color);
@@ -115,15 +101,6 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
           author: writerName,
         });
       }
-    };
-
-    const handleMessageCleared = () => {
-      console.log("[handleMessageCleared]");
-      setCurrentMessage("");
-      setCurrentWriter(null);
-      setMessageColor("");
-      setWriterName("");
-      setTimeLeft(null);
     };
 
     const handleSystemMessage = (message: string) => {
@@ -142,23 +119,16 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
     socketClient.on("roomState", handleRoomState);
     socketClient.on("writerChanged", handleWriterChanged);
     socketClient.on("messageUpdate", handleMessageUpdate);
-    socketClient.on("messageCleared", handleMessageCleared);
     socketClient.on("system_message", handleSystemMessage);
     socketClient.on("room_users_update", handleRoomUsersUpdate);
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev !== null ? Math.max(0, prev - 1) : null));
-    }, 1000);
 
     return () => {
       socketClient.off("roomState", handleRoomState);
       socketClient.off("writerChanged", handleWriterChanged);
       socketClient.off("messageUpdate", handleMessageUpdate);
-      socketClient.off("messageCleared", handleMessageCleared);
       socketClient.off("system_message", handleSystemMessage);
       socketClient.off("room_users_update", handleRoomUsersUpdate);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearInterval(timer);
     };
   }, [userColor, roomId, currentUserName]);
 
@@ -180,17 +150,10 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
     socketClient.joinRoom(roomId, newColor, currentUserName);
   };
 
-  const requestTurn = () => {
-    socketClient.requestTurn();
-  };
-
-  const grantTurn = (userId: string) => {
-    socketClient.grantTurn(userId);
-  };
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="p-6 space-y-6">
+        {/* Header con compartir enlace y configuración */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
             <Input value={shareUrl} readOnly className="bg-gray-50" />
@@ -206,6 +169,7 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
           />
         </div>
 
+        {/* Mensajes del sistema */}
         {systemMessages.map((message, index) => (
           <div
             key={index}
@@ -216,6 +180,7 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
           </div>
         ))}
 
+        {/* Área de mensajes */}
         <div
           className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg transition-colors duration-200"
           style={{
@@ -246,27 +211,20 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
           </div>
         </div>
 
+        {/* Input de mensaje y indicador de escritura */}
         <div className="relative">
           <MessageInput isBlocked={isBlocked} />
-          <div className="text-sm py-2 flex items-center gap-4">
-            {currentWriter && (
-              <span
-                data-testid="writing-indicator"
-                className="text-base"
-                style={{ color: currentWriter.color }}
-              >
-                {`${currentWriter.name} está escribiendo...`}
-              </span>
-            )}
-            {timeLeft !== null && timeLeft < 30 && (
-              <span className="flex items-center gap-1 text-orange-500">
-                <Clock className="h-4 w-4" />
-                {timeLeft}s
-              </span>
-            )}
-          </div>
+          {currentWriter && (
+            <span
+              className="text-sm py-2"
+              style={{ color: currentWriter.color }}
+            >
+              {`${currentWriter.name} está escribiendo...`}
+            </span>
+          )}
         </div>
 
+        {/* Lista de usuarios */}
         <div className="border-t pt-4 mt-4">
           <h3 className="font-medium mb-2">Usuarios en la sala:</h3>
           <div className="space-y-2">
@@ -291,10 +249,9 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => requestTurn()}
-                    disabled={user.requestingTurn}
+                    onClick={() => socketClient.requestTurn()}
                   >
-                    {user.requestingTurn ? "Turno solicitado" : "Pedir turno"}
+                    Pedir turno
                   </Button>
                 )}
                 {currentWriter?.writerId === socketClient.getSocketId() &&
@@ -303,7 +260,7 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => grantTurn(userId)}
+                      onClick={() => socketClient.grantTurn(userId)}
                     >
                       Dar turno
                     </Button>
