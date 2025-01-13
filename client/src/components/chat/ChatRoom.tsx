@@ -217,8 +217,13 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
         ))}
 
         <div
-          className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg"
-          style={{ color: messageColor || "inherit" }}
+          className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg transition-colors duration-200"
+          style={{
+            backgroundColor: messageColor ? `${messageColor}15` : "transparent",
+            borderColor: messageColor,
+            borderWidth: currentWriter ? "1px" : "0",
+            color: messageColor || "inherit",
+          }}
         >
           <div className="text-center">
             {currentWriter ? (
