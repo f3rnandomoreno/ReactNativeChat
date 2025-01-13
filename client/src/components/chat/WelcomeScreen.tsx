@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NameInput } from "./NameInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Users, MessageSquare } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, MessageSquare, Leaf } from "lucide-react";
 
 interface WelcomeScreenProps {
   onNameSubmit: (name: string) => void;
@@ -24,7 +24,7 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <Users className="h-8 w-8 mx-auto mb-2 text-purple-500" />
@@ -38,6 +38,14 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
             <MessageSquare className="h-8 w-8 mx-auto mb-2 text-indigo-500" />
             <h3 className="font-semibold">Tiempo Real</h3>
             <p className="text-sm text-gray-600">Ve la escritura en tiempo real</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Leaf className="h-8 w-8 mx-auto mb-2 text-green-500" />
+            <h3 className="font-semibold">Eco-Friendly</h3>
+            <p className="text-sm text-gray-600">Mínimo impacto ambiental</p>
           </CardContent>
         </Card>
       </div>
