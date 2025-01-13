@@ -13,13 +13,11 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
         <CardContent className="p-6 text-center space-y-4">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Chat en Tiempo Real
-          </h1>
-          <p className="text-gray-600 text-lg">
+          <h2 className="text-3xl font-bold">¡Bienvenido!</h2>
+          <p className="text-gray-600">
             Conecta y chatea con otros usuarios en tiempo real
           </p>
         </CardContent>
@@ -64,24 +62,13 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-2">Características especiales</h3>
+                  <h3 className="font-semibold mb-2">Características</h3>
                   <ul className="list-disc list-inside space-y-2 text-sm">
                     <li>Visualización de escritura en tiempo real</li>
                     <li>Sistema de turnos para evitar superposiciones</li>
                     <li>Indicadores de estado de los usuarios</li>
                     <li>Notificaciones de entrada y salida</li>
                     <li>Interfaz intuitiva y responsive</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-2">Compromiso Ambiental</h3>
-                  <ul className="list-disc list-inside space-y-2 text-sm">
-                    <li>Diseño eficiente sin uso de bases de datos</li>
-                    <li>Optimización de recursos para menor consumo energético</li>
-                    <li>Comunicación directa para reducir emisiones de CO2</li>
-                    <li>Contribución activa contra el calentamiento global</li>
-                    <li>Arquitectura ligera y sostenible</li>
                   </ul>
                 </div>
               </div>

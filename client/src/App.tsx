@@ -6,6 +6,7 @@ import { WelcomeScreen } from "@/components/chat/WelcomeScreen";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FeatureIcons } from "@/components/chat/FeatureIcons";
+import { AppBar } from "@/components/AppBar";
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8);
@@ -32,51 +33,66 @@ function App() {
   };
 
   if (!userName) {
-    return <WelcomeScreen onNameSubmit={setUserName} />;
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <AppBar />
+        <div className="flex-1 p-4 flex items-center justify-center">
+          <WelcomeScreen onNameSubmit={setUserName} />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 flex items-center justify-center">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Switch>
         <Route path="/">
-          {userColor ? (
-            <div className="w-full max-w-2xl space-y-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
-                <CardContent className="p-6 text-center space-y-4">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    Crear Nueva Sala
-                  </h1>
-                  <p className="text-gray-600 text-lg">
-                    Inicia una nueva conversación en tiempo real
-                  </p>
-                </CardContent>
-              </Card>
+          <>
+            <AppBar />
+            <div className="flex-1 p-4 flex items-center justify-center">
+              {userColor ? (
+                <div className="w-full max-w-2xl space-y-6">
+                  <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
+                    <CardContent className="p-6 text-center space-y-4">
+                      <h2 className="text-3xl font-bold">Nueva Conversación</h2>
+                      <p className="text-gray-600">
+                        Inicia una nueva conversación en tiempo real
+                      </p>
+                    </CardContent>
+                  </Card>
 
-              <FeatureIcons />
+                  <FeatureIcons />
 
-              <Card>
-                <CardContent className="p-6">
-                  <Button 
-                    className="w-full"
-                    onClick={() => setLocation(`/room/${generateRoomId()}`)}
-                  >
-                    Crear Sala
-                  </Button>
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <Button 
+                        className="w-full"
+                        onClick={() => setLocation(`/room/${generateRoomId()}`)}
+                      >
+                        Crear Sala
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <ColorPicker onColorSelected={handleColorSelected} />
+              )}
             </div>
-          ) : (
-            <ColorPicker onColorSelected={handleColorSelected} />
-          )}
+          </>
         </Route>
         <Route path="/room/:roomId">
           {params => userColor ? (
-            <ChatRoom 
-              userColor={userColor} 
-              roomId={params.roomId} 
-              userName={userName}
-              onColorChange={handleColorChange}
-            />
+            <>
+              <AppBar showBackButton />
+              <div className="flex-1 p-4 flex items-center justify-center">
+                <ChatRoom 
+                  userColor={userColor} 
+                  roomId={params.roomId} 
+                  userName={userName}
+                  onColorChange={handleColorChange}
+                />
+              </div>
+            </>
           ) : (
             <ColorPicker onColorSelected={setUserColor} />
           )}
