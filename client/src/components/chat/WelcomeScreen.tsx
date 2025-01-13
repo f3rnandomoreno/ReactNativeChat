@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NameInput } from "./NameInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Globe2, Users, MessageSquare } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, MessageSquare } from "lucide-react";
 
 interface WelcomeScreenProps {
   onNameSubmit: (name: string) => void;
@@ -16,23 +16,15 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
       <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
         <CardContent className="p-6 text-center space-y-4">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Chat Multilingüe en Tiempo Real
+            Chat en Tiempo Real
           </h1>
           <p className="text-gray-600 text-lg">
-            Conecta y chatea con personas de todo el mundo sin barreras de idioma
+            Conecta y chatea con otros usuarios en tiempo real
           </p>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Globe2 className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-            <h3 className="font-semibold">Traducción Automática</h3>
-            <p className="text-sm text-gray-600">Chatea en tu idioma preferido</p>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <Users className="h-8 w-8 mx-auto mb-2 text-purple-500" />
@@ -54,7 +46,7 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
         <CardContent className="p-6">
           <div className="space-y-4">
             <NameInput onNameSubmit={onNameSubmit} />
-            
+
             <Button
               variant="ghost"
               className="w-full mt-4 text-gray-600"
@@ -82,7 +74,7 @@ export function WelcomeScreen({ onNameSubmit }: WelcomeScreenProps) {
                     <li>Elige un color para personalizar tus mensajes</li>
                     <li>Crea una nueva sala o únete a una existente</li>
                     <li>Comparte el enlace de la sala con otros usuarios</li>
-                    <li>¡Comienza a chatear en tu idioma!</li>
+                    <li>¡Comienza a chatear!</li>
                   </ol>
                 </div>
 
