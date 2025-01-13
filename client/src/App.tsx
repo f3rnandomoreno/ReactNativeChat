@@ -13,10 +13,10 @@ function generateRoomId() {
 }
 
 function App() {
-  const [userColor, setUserColor] = useState<string>(() => 
+  const [userColor, setUserColor] = useState<string>(() =>
     localStorage.getItem("userColor") || ""
   );
-  const [userName, setUserName] = useState<string>(() => 
+  const [userName, setUserName] = useState<string>(() =>
     localStorage.getItem("userName") || ""
   );
   const [, setLocation] = useLocation();
@@ -38,61 +38,66 @@ function App() {
         <Route path="/">
           <>
             <AppBar />
-            <div className="flex-1 p-4 flex items-center justify-center">
+            <main className="flex-1 p-4">
               {!userName ? (
                 <WelcomeScreen onNameSubmit={setUserName} />
               ) : !userColor ? (
-                <>
-                  <AppBar />
+                <div className="flex items-center justify-center">
                   <ColorPicker onColorSelected={handleColorSelected} />
-                </>
+                </div>
               ) : (
-                <div className="w-full max-w-2xl space-y-6">
-                  <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
-                    <CardContent className="p-6 text-center space-y-4">
-                      <h2 className="text-3xl font-bold">Nueva Conversación en RealtimeChat</h2>
-                      <p className="text-gray-600">
-                        Inicia una nueva conversación en tiempo real
-                      </p>
-                    </CardContent>
-                  </Card>
+                <div className="flex items-center justify-center">
+                  <div className="w-full max-w-2xl space-y-6">
+                    <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
+                      <CardContent className="p-6 text-center space-y-4">
+                        <h2 className="text-3xl font-bold">Nueva Conversación en RealtimeChat</h2>
+                        <p className="text-gray-600">
+                          Inicia una nueva conversación en tiempo real
+                        </p>
+                      </CardContent>
+                    </Card>
 
-                  <FeatureIcons />
+                    <FeatureIcons />
 
-                  <Card>
-                    <CardContent className="p-6">
-                      <Button 
-                        className="w-full"
-                        onClick={() => setLocation(`/room/${generateRoomId()}`)}
-                      >
-                        Crear Sala
-                      </Button>
-                    </CardContent>
-                  </Card>
+                    <Card>
+                      <CardContent className="p-6">
+                        <Button
+                          className="w-full"
+                          onClick={() => setLocation(`/room/${generateRoomId()}`)}
+                        >
+                          Crear Sala
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               )}
-            </div>
+            </main>
           </>
         </Route>
         <Route path="/room/:roomId">
           {params => userColor ? (
             <>
               <AppBar showBackButton />
-              <div className="flex-1 p-4 flex items-center justify-center">
-                <ChatRoom 
-                  userColor={userColor} 
-                  roomId={params.roomId} 
-                  userName={userName}
-                  onColorChange={handleColorChange}
-                />
-              </div>
+              <main className="flex-1 p-4">
+                <div className="flex items-center justify-center">
+                  <ChatRoom
+                    userColor={userColor}
+                    roomId={params.roomId}
+                    userName={userName}
+                    onColorChange={handleColorChange}
+                  />
+                </div>
+              </main>
             </>
           ) : (
             <>
               <AppBar />
-              <div className="flex-1 p-4 flex items-center justify-center">
-                <ColorPicker onColorSelected={handleColorSelected} />
-              </div>
+              <main className="flex-1 p-4">
+                <div className="flex items-center justify-center">
+                  <ColorPicker onColorSelected={handleColorSelected} />
+                </div>
+              </main>
             </>
           )}
         </Route>
