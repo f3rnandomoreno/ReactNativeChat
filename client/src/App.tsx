@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { ColorPicker } from "@/components/chat/ColorPicker";
 import { ChatRoom } from "@/components/chat/ChatRoom";
-import { NameInput } from "@/components/chat/NameInput";
+import { WelcomeScreen } from "@/components/chat/WelcomeScreen";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -21,11 +21,11 @@ function App() {
   };
 
   if (!userName) {
-    return <NameInput onNameSubmit={setUserName} />;
+    return <WelcomeScreen onNameSubmit={setUserName} />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 flex items-center justify-center">
       <Switch>
         <Route path="/">
           {userColor ? (
