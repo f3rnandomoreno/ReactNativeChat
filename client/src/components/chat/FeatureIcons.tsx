@@ -19,7 +19,7 @@ export function FeatureIcons() {
           <Leaf className="h-10 w-10 mx-auto mb-3 text-green-500" />
           <h3 className="font-semibold text-lg">Eco-Friendly</h3>
           <p className="text-sm text-gray-600">
-            Ahorramos recursos al mantener solo el mensaje actual
+            Sin bases de datos permanentes, reducimos el consumo energético y las emisiones de CO2
           </p>
         </CardContent>
       </Card>
@@ -49,7 +49,7 @@ export function FeatureIcons() {
           <Lock className="h-10 w-10 mx-auto mb-3 text-red-500" />
           <h3 className="font-semibold text-lg">Privacidad Total</h3>
           <p className="text-sm text-gray-600">
-            Los mensajes se borran al instante, como palabras al viento
+            Sin almacenamiento permanente, tus mensajes desaparecen al instante
           </p>
         </CardContent>
       </Card>

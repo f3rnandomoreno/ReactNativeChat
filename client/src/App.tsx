@@ -51,12 +51,13 @@ function App() {
                     <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
                       <CardContent className="p-6 text-center space-y-4">
                         <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                          RealtimeChat: Una Nueva Forma de Conectar
+                          RealtimeChat: Comunicación Consciente
                         </h2>
                         <p className="text-gray-600 max-w-lg mx-auto">
-                          Experimenta una comunicación más natural y fluida, donde cada 
-                          letra se transmite en tiempo real, como en una conversación cara a cara. 
-                          Un espacio donde la privacidad y la atención son prioridad.
+                          Experimenta una forma de comunicación más natural y sostenible. 
+                          Sin bases de datos permanentes, reducimos el consumo energético 
+                          y las emisiones de CO2, mientras mantenemos tus conversaciones 
+                          privadas y efímeras como las palabras al viento.
                         </p>
                       </CardContent>
                     </Card>
