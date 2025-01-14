@@ -33,12 +33,12 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-gray-100/50">
       <Switch>
         <Route path="/">
           <>
             <AppBar />
-            <main className="flex-1 p-4">
+            <main className="flex-1 p-4 md:p-6 container mx-auto">
               {!userName ? (
                 <WelcomeScreen onNameSubmit={setUserName} />
               ) : !userColor ? (
@@ -47,16 +47,16 @@ function App() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
-                  <div className="w-full max-w-2xl space-y-6">
-                    <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
-                      <CardContent className="p-6 text-center space-y-4">
+                  <div className="w-full max-w-2xl space-y-8">
+                    <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50 border-0 shadow-lg">
+                      <CardContent className="p-8 text-center space-y-6">
                         <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                           RealtimeChat: Comunicación Consciente
                         </h2>
-                        <p className="text-gray-600 max-w-lg mx-auto">
-                          Experimenta una forma de comunicación más natural y sostenible. 
-                          Sin bases de datos permanentes, reducimos el consumo energético 
-                          y las emisiones de CO2, mientras mantenemos tus conversaciones 
+                        <p className="text-gray-600 max-w-lg mx-auto text-base leading-relaxed">
+                          Experimenta una forma de comunicación más natural y sostenible.
+                          Sin bases de datos permanentes, reducimos el consumo energético
+                          y las emisiones de CO2, mientras mantenemos tus conversaciones
                           privadas y efímeras como las palabras al viento.
                         </p>
                       </CardContent>
@@ -64,10 +64,15 @@ function App() {
 
                     <FeatureIcons />
 
-                    <Card>
-                      <CardContent className="p-6">
+                    <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                      <CardContent className="p-8">
                         <Button
-                          className="w-full"
+                          className="w-full h-14 text-lg font-semibold transition-all duration-200
+                            bg-gradient-to-r from-primary to-primary/90
+                            hover:scale-[1.02] active:scale-[0.98]
+                            shadow-lg hover:shadow-xl
+                            hover:from-primary/90 hover:to-primary
+                            rounded-lg"
                           onClick={() => setLocation(`/room/${generateRoomId()}`)}
                         >
                           Iniciar Nueva Conversación
@@ -84,7 +89,7 @@ function App() {
           {params => userColor ? (
             <>
               <AppBar showBackButton />
-              <main className="flex-1 p-4">
+              <main className="flex-1 p-4 md:p-6 container mx-auto">
                 <div className="flex items-center justify-center">
                   <ChatRoom
                     userColor={userColor}
@@ -98,7 +103,7 @@ function App() {
           ) : (
             <>
               <AppBar />
-              <main className="flex-1 p-4">
+              <main className="flex-1 p-4 md:p-6 container mx-auto">
                 <div className="flex items-center justify-center">
                   <ColorPicker onColorSelected={handleColorSelected} />
                 </div>
