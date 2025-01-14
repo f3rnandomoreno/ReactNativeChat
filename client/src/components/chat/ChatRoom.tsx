@@ -6,7 +6,7 @@ import { MessageInput } from "./MessageInput";
 import { SettingsMenu } from "./SettingsMenu";
 import { socketClient } from "@/lib/socket";
 import type { WriterInfo, MessageUpdate, UserInfo } from "@/lib/types";
-import { AlertCircle, Clock } from "lucide-react";
+import { Share2, Copy, AlertCircle, Clock } from "lucide-react";
 
 interface ChatRoomProps {
   userColor: string;
@@ -21,6 +21,7 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
   const [writerName, setWriterName] = useState("");
   const [currentWriter, setCurrentWriter] = useState<WriterInfo | null>(null);
   const [showCopied, setShowCopied] = useState(false);
+  const [showShared, setShowShared] = useState(false);
   const [systemMessages, setSystemMessages] = useState<string[]>([]);
   const [users, setUsers] = useState<Record<string, UserInfo>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -33,6 +34,10 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
   const [currentUserName, setCurrentUserName] = useState(userName);
 
   const shareUrl = `${window.location.origin}/room/${roomId}`;
+  const canShare = typeof window !== 'undefined' && 
+                  'navigator' in window && 
+                  'share' in navigator && 
+                  typeof navigator.share === 'function';
 
   useEffect(() => {
     const connectAndJoin = () => {
@@ -163,9 +168,34 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
   }, [userColor, roomId, currentUserName]);
 
   const copyShareLink = async () => {
-    await navigator.clipboard.writeText(shareUrl);
-    setShowCopied(true);
-    setTimeout(() => setShowCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!canShare) {
+      await copyShareLink();
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: 'RealtimeChat: Únete a mi sala',
+        text: `${currentUserName} te invita a unirte a una conversación en RealtimeChat`,
+        url: shareUrl
+      });
+      setShowShared(true);
+      setTimeout(() => setShowShared(false), 2000);
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Si falla el compartir, intentamos copiar al portapapeles como fallback
+      await copyShareLink();
+    }
   };
 
   const handleNameChange = (newName: string) => {
@@ -194,9 +224,17 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
             <Input value={shareUrl} readOnly className="bg-gray-50" />
-            <Button onClick={copyShareLink}>
-              {showCopied ? "¡Copiado!" : "Copiar"}
-            </Button>
+            {canShare ? (
+              <Button onClick={handleShare} className="gap-2">
+                <Share2 className="h-4 w-4" />
+                {showShared ? "¡Compartido!" : "Compartir"}
+              </Button>
+            ) : (
+              <Button onClick={copyShareLink} className="gap-2">
+                <Copy className="h-4 w-4" />
+                {showCopied ? "¡Copiado!" : "Copiar"}
+              </Button>
+            )}
           </div>
           <SettingsMenu
             currentName={currentUserName}
