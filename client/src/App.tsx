@@ -56,7 +56,7 @@ function App() {
                         <p className="text-gray-600 max-w-lg mx-auto text-base leading-relaxed">
                           Experimenta una forma de comunicación más natural y sostenible.
                           Sin bases de datos permanentes, reducimos el consumo energético
-                          y las emisiones de CO2, mientras mantenemos tus conversaciones
+                          y las emisiones de CO2, mientras mantenemos tus conversaciones privadas, más enfocadas y comprensivas.ones
                           privadas y efímeras como las palabras al viento.
                         </p>
                       </CardContent>
