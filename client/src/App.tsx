@@ -50,9 +50,13 @@ function App() {
                   <div className="w-full max-w-2xl space-y-6">
                     <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
                       <CardContent className="p-6 text-center space-y-4">
-                        <h2 className="text-3xl font-bold">Nueva Conversación en RealtimeChat</h2>
-                        <p className="text-gray-600">
-                          Inicia una nueva conversación en tiempo real
+                        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                          RealtimeChat: Una Nueva Forma de Conectar
+                        </h2>
+                        <p className="text-gray-600 max-w-lg mx-auto">
+                          Experimenta una comunicación más natural y fluida, donde cada 
+                          letra se transmite en tiempo real, como en una conversación cara a cara. 
+                          Un espacio donde la privacidad y la atención son prioridad.
                         </p>
                       </CardContent>
                     </Card>
@@ -65,7 +69,7 @@ function App() {
                           className="w-full"
                           onClick={() => setLocation(`/room/${generateRoomId()}`)}
                         >
-                          Crear Sala
+                          Iniciar Nueva Conversación
                         </Button>
                       </CardContent>
                     </Card>

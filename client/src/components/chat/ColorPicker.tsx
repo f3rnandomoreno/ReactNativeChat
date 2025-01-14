@@ -9,16 +9,16 @@ interface Color {
 }
 
 const COLORS: Color[] = [
-  { hex: "#ef4444", name: "Rojo Energético" },
-  { hex: "#f97316", name: "Naranja Vibrante" },
-  { hex: "#f59e0b", name: "Ámbar Cálido" },
-  { hex: "#84cc16", name: "Lima Fresco" },
-  { hex: "#22c55e", name: "Verde Naturaleza" },
-  { hex: "#06b6d4", name: "Cian Océano" },
-  { hex: "#3b82f6", name: "Azul Cielo" },
-  { hex: "#6366f1", name: "Índigo Real" },
-  { hex: "#a855f7", name: "Púrpura Místico" },
-  { hex: "#ec4899", name: "Rosa Sunset" },
+  { hex: "#ef4444", name: "Rojo Pasión" },
+  { hex: "#f97316", name: "Naranja Energía" },
+  { hex: "#f59e0b", name: "Ámbar Calidez" },
+  { hex: "#84cc16", name: "Lima Frescura" },
+  { hex: "#22c55e", name: "Verde Esperanza" },
+  { hex: "#06b6d4", name: "Cian Serenidad" },
+  { hex: "#3b82f6", name: "Azul Libertad" },
+  { hex: "#6366f1", name: "Índigo Sabiduría" },
+  { hex: "#a855f7", name: "Púrpura Creatividad" },
+  { hex: "#ec4899", name: "Rosa Empatía" },
 ];
 
 interface ColorPickerProps {
@@ -35,10 +35,14 @@ export function ColorPicker({ onColorSelected }: ColorPickerProps) {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardContent className="p-6 space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold">Personaliza tu Experiencia</h2>
+        <div className="text-center space-y-3">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Elige tu Color Personal
+          </h2>
           <p className="text-gray-600">
-            Elige un color que refleje tu personalidad. Este color identificará tus mensajes en el chat.
+            Tu color te identifica en el chat, reflejando tu personalidad y haciendo 
+            la comunicación más personal y única. Como en una conversación real, 
+            cada persona tiene su propia voz.
           </p>
         </div>
 
@@ -61,7 +65,7 @@ export function ColorPicker({ onColorSelected }: ColorPickerProps) {
                 Tú
               </div>
               <div className="text-gray-600">
-                ¡Hola! Este es un ejemplo de cómo se verán tus mensajes.
+                Cada mensaje tuyo tendrá este color, haciéndolo único y personal.
               </div>
             </div>
           </div>
@@ -70,7 +74,9 @@ export function ColorPicker({ onColorSelected }: ColorPickerProps) {
         {/* Color Grid */}
         <div>
           <div className="text-sm text-gray-600 mb-3">
-            {previewColorName || "Selecciona un color:"}
+            {previewColorName ? 
+              `${previewColorName} - Un color que refleja tu esencia` : 
+              "Selecciona el color que mejor te represente:"}
           </div>
           <div className="grid grid-cols-5 gap-4">
             {COLORS.map((color) => (
@@ -97,7 +103,7 @@ export function ColorPicker({ onColorSelected }: ColorPickerProps) {
           disabled={!selectedColor}
           onClick={() => selectedColor && onColorSelected(selectedColor)}
         >
-          {selectedColor ? "Continuar" : "Elige un color para continuar"}
+          {selectedColor ? "Comenzar a Chatear" : "Elige un color para comenzar"}
         </Button>
       </CardContent>
     </Card>

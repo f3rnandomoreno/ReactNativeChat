@@ -1,0 +1,35 @@
+Este chat está diseñado para que la comunicación sea lo más fluida y parecida a la comunicación real entre dos personas.
+	La persona podrá ver cada letra de forma instantánea que ha escrito el interlocutor.
+	De este modo la comuncicación es mucho más rápida y efiente, entiendiendo el mensaje poco a poco mientras la otra persona escribe.
+	Cuando una persona habla la otra simplemente escucha y espera a que la otra termine.
+	En caso de que hablen a la vez no se entenderá nada, porque solo se muestra un mensaje.
+	Una vez termine de escribir el mensaje, la persona borrará el mensaje dejando espacio al nuevo mensaje de la otra persona o de él mismo.
+	Si uno de los dos habla cuando la otra persona está hablando se borrará el mensaje que estaba ya escrito.
+	¿Por qué usar este chat?
+	A diferencia de los demás cada vez que se pulsa ENTER toda la información es borrada de la base de datos,
+	Al igual que siempre se dice que las palabras se las lleva el viento. Aquí las letras se las llevará el viento.
+	de este modo se asegura la privacidad de la conversación en su totalidad.
+	Cuando una de las dos personas habla, la otra tiene bloqueado el escribir. Es una forma de enseñar a escuchar antes de escribir,
+	esperar a que el otro termine.
+  	Está hecho para sentir el contacto con la otra persona en todo momento, siendo un chat más cercano.
+  	Hay personas que no soportan la incertidumbre del que escribirán. Que necesitan sentir cada palabra en el momento.
+  	De esta forma se sentirán más seguras, sintiendo una interacción más real.
+  	¿Por qué debe quedar lo que escribimos por chat guardado?
+  	¿Por qué no usar un método que nos haga libres ahorrando recursos y atención?
+  	Ahorramos recursos porque la base de datos que usamos es infitamente más pequeña que la de un chat normal. Solo guarda una frase por
+  	cada dos personas. A diferencia de los otros chat que guardan miles de mensajes. Reduciendo de este modo el consumo eléctrico de servidores y
+  	protegiendo así el medioambiente.
+  	También ahorramos en atención ya que es mucho más fácil atender una sola frase, que muchas a la vez. De este modo ayudamos a las personas
+  	que tienen falta de atención haciéndole más sencilla la comunicación para ellos. Ya que uno de los problemas que hay hoy dia es la falta de atención
+  	este Chat será muy útil para alibiar este problema.
+  	Apuesta por la tecnología en un mundo más libre y que protege mejor la privacidad de las personas, su intimidad.
+
+  	Otro de los beneficios de este chat es que mejora la memoria ya que obliga a la persona a memorizar la última frase leida.
+  	Pulsamos ENTER para marcar como leido el texto.
+
+  	Cada usuario elige un color en el chat.
+  	Se marca como leido el color que haya elegido.
+
+  	Permitir elegir el color que quieres que se muestre es una forma más de libertad en el chat.
+
+	De este modo queremos guardar la intimidad de las personas que hablan por este chat.
