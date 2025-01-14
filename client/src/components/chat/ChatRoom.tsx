@@ -34,9 +34,9 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
   const [currentUserName, setCurrentUserName] = useState(userName);
 
   const shareUrl = `${window.location.origin}/room/${roomId}`;
-  const canShare = typeof window !== 'undefined' && 
-                  'navigator' in window && 
-                  'share' in navigator && 
+  const canShare = typeof window !== 'undefined' &&
+                  'navigator' in window &&
+                  'share' in navigator &&
                   typeof navigator.share === 'function';
 
   useEffect(() => {
@@ -113,7 +113,8 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
       setMessageColor(color);
       setWriterName(writerName);
 
-      if (!currentWriter) {
+      // Actualizamos lastMessage solo cuando se completa un mensaje
+      if (message.trim()) {
         setLastMessage({
           text: message,
           color: color,
@@ -129,6 +130,7 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
       setMessageColor("");
       setWriterName("");
       setTimeLeft(null);
+      // No limpiamos lastMessage aquí para mantener el último mensaje visible
     };
 
     const handleSystemMessage = (message: string) => {

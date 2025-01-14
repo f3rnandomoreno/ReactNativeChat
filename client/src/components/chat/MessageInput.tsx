@@ -25,10 +25,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && message.trim()) {
+      e.preventDefault(); // Prevenir comportamiento por defecto
+      const currentMessage = message; // Capturar el mensaje actual
+      socketClient.updateMessage(currentMessage); // Asegurar que el último mensaje esté sincronizado
+      await new Promise(resolve => setTimeout(resolve, 50)); // Pequeña pausa para asegurar sincronización
       stopWriting();
       socketClient.submitMessage();
+      setMessage(""); // Limpiar el input después de enviar
     }
   };
 
@@ -45,7 +50,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
       startWriting();
     }
 
-    socketClient.updateMessage(newMessage);
+    // Asegurar que el mensaje se envía después de actualizar el estado local
+    setTimeout(() => {
+      socketClient.updateMessage(newMessage);
+    }, 0);
   };
 
   const handleBlur = () => {
