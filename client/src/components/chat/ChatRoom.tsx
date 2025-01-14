@@ -35,9 +35,9 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
 
   const shareUrl = `${window.location.origin}/room/${roomId}`;
   const canShare = typeof window !== 'undefined' &&
-                  'navigator' in window &&
-                  'share' in navigator &&
-                  typeof navigator.share === 'function';
+                    'navigator' in window &&
+                    'share' in navigator &&
+                    typeof navigator.share === 'function';
 
   useEffect(() => {
     const connectAndJoin = () => {
@@ -113,8 +113,9 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
       setMessageColor(color);
       setWriterName(writerName);
 
-      // Actualizamos lastMessage solo cuando se completa un mensaje
-      if (message.trim()) {
+      // Solo actualizar lastMessage cuando el mensaje se completa
+      // y es diferente del último mensaje guardado
+      if (message.trim() && (!lastMessage || lastMessage.text !== message)) {
         setLastMessage({
           text: message,
           color: color,
@@ -257,21 +258,28 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
         ))}
 
         <div
-          className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg"
-          style={{ color: messageColor || "inherit" }}
+          className="min-h-[200px] flex items-center justify-center text-2xl font-medium p-4 rounded-lg transition-all duration-200"
+          style={{ 
+            color: messageColor || (lastMessage ? lastMessage.color : "inherit"),
+            backgroundColor: messageColor ? `${messageColor}05` : 'transparent'
+          }}
         >
           <div className="text-center">
             {currentWriter ? (
               <>
                 {currentMessage}
                 {writerName && (
-                  <div className="text-sm mt-2 opacity-75">— {writerName}</div>
+                  <div className="text-sm mt-2 opacity-75 transition-opacity duration-200">
+                    — {writerName}
+                  </div>
                 )}
               </>
             ) : lastMessage ? (
               <>
-                {lastMessage.text}
-                <div className="text-sm mt-2 opacity-75">
+                <div className="transition-all duration-200">
+                  {lastMessage.text}
+                </div>
+                <div className="text-sm mt-2 opacity-75 transition-opacity duration-200">
                   — {lastMessage.author}
                 </div>
               </>

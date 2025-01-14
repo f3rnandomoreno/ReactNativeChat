@@ -9,6 +9,7 @@ interface MessageInputProps {
 export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
   const [message, setMessage] = useState("");
   const isWritingRef = useRef(false);
+  const messageUpdateTimeoutRef = useRef<NodeJS.Timeout>();
 
   const stopWriting = () => {
     if (isWritingRef.current) {
@@ -27,13 +28,25 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && message.trim()) {
-      e.preventDefault(); // Prevenir comportamiento por defecto
-      const currentMessage = message; // Capturar el mensaje actual
-      socketClient.updateMessage(currentMessage); // Asegurar que el último mensaje esté sincronizado
-      await new Promise(resolve => setTimeout(resolve, 50)); // Pequeña pausa para asegurar sincronización
+      e.preventDefault();
+
+      // Limpiar cualquier actualización pendiente
+      if (messageUpdateTimeoutRef.current) {
+        clearTimeout(messageUpdateTimeoutRef.current);
+      }
+
+      // Asegurar que el último mensaje se envía
+      socketClient.updateMessage(message.trim());
+
+      // Pequeña pausa para asegurar que el mensaje se actualizó
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Detener la escritura y enviar el mensaje
       stopWriting();
       socketClient.submitMessage();
-      setMessage(""); // Limpiar el input después de enviar
+
+      // Limpiar el input después de confirmar el envío
+      setMessage("");
     }
   };
 
@@ -50,10 +63,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
       startWriting();
     }
 
-    // Asegurar que el mensaje se envía después de actualizar el estado local
-    setTimeout(() => {
+    // Cancelar cualquier actualización pendiente anterior
+    if (messageUpdateTimeoutRef.current) {
+      clearTimeout(messageUpdateTimeoutRef.current);
+    }
+
+    // Programar la nueva actualización con un pequeño retraso
+    messageUpdateTimeoutRef.current = setTimeout(() => {
       socketClient.updateMessage(newMessage);
-    }, 0);
+    }, 50);
   };
 
   const handleBlur = () => {
@@ -66,6 +84,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
     window.addEventListener("blur", handleBlur);
     return () => {
       window.removeEventListener("blur", handleBlur);
+      if (messageUpdateTimeoutRef.current) {
+        clearTimeout(messageUpdateTimeoutRef.current);
+      }
       stopWriting();
     };
   }, []);
@@ -73,6 +94,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
   useEffect(() => {
     if (isBlocked) {
       setMessage("");
+      if (messageUpdateTimeoutRef.current) {
+        clearTimeout(messageUpdateTimeoutRef.current);
+      }
       stopWriting();
     }
   }, [isBlocked]);
