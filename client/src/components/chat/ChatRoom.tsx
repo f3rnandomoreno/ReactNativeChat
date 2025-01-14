@@ -50,6 +50,9 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
       if (document.visibilityState === "visible") {
         console.log("[ChatRoom] Window became visible, reconnecting...");
         connectAndJoin();
+      } else {
+        console.log("[ChatRoom] Window hidden, disconnecting...");
+        socketClient.disconnect();
       }
     };
 
@@ -167,6 +170,7 @@ export function ChatRoom({ userColor, roomId, userName, onColorChange }: ChatRoo
       socketClient.off("room_users_update", handleRoomUsersUpdate);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(timer);
+      socketClient.disconnect(); // Asegurar desconexión al desmontar
     };
   }, [userColor, roomId, currentUserName]);
 

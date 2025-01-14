@@ -5,6 +5,7 @@ class SocketClient {
   private socket: Socket | null = null;
   private handlers: Map<string, Function[]> = new Map();
   public socketId: string | null = null;
+  private currentRoom: string | null = null;
 
   constructor() {
     this.setupSocket();
@@ -81,7 +82,13 @@ class SocketClient {
 
   disconnect() {
     console.log("[SocketClient] Disconnecting...");
-    this.socket?.disconnect();
+    if (this.socket?.connected) {
+      // Si estamos en una sala, emitir el evento de salida antes de desconectar
+      if (this.currentRoom) {
+        this.socket.emit("leave_room", this.currentRoom);
+      }
+      this.socket.disconnect();
+    }
   }
 
   joinRoom(roomId: string, color: string, name: string) {
@@ -90,6 +97,7 @@ class SocketClient {
       console.log("[SocketClient] Socket not connected, connecting first...");
       this.connect();
     }
+    this.currentRoom = roomId;
     this.socket?.emit("join_room", { roomId, color, name });
   }
 
