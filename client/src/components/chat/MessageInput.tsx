@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { SendHorizontal } from "lucide-react";
 import { socketClient } from "@/lib/socket";
 
 interface MessageInputProps {
@@ -101,16 +103,48 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
     }
   }, [isBlocked]);
 
+  const handleSendMessage = async () => {
+    if (message.trim()) {
+      // Limpiar cualquier actualización pendiente
+      if (messageUpdateTimeoutRef.current) {
+        clearTimeout(messageUpdateTimeoutRef.current);
+      }
+
+      // Asegurar que el último mensaje se envía
+      socketClient.updateMessage(message.trim());
+
+      // Pequeña pausa para asegurar que el mensaje se actualizó
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Detener la escritura y enviar el mensaje
+      stopWriting();
+      socketClient.submitMessage();
+
+      // Limpiar el input después de confirmar el envío
+      setMessage("");
+    }
+  };
+
   return (
-    <Input
-      type="text"
-      placeholder={isBlocked ? "Espera tu turno..." : "Escribe tu mensaje..."}
-      value={message}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      disabled={isBlocked}
-      className="text-lg"
-      data-testid="message-input"
-    />
+    <div className="flex gap-2">
+      <Input
+        type="text"
+        placeholder={isBlocked ? "Espera tu turno..." : "Escribe tu mensaje..."}
+        value={message}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        disabled={isBlocked}
+        className="text-lg"
+        data-testid="message-input"
+      />
+      <Button 
+        onClick={handleSendMessage} 
+        disabled={isBlocked || !message.trim()}
+        size="icon"
+        className="shrink-0"
+      >
+        <SendHorizontal className="h-5 w-5" />
+      </Button>
+    </div>
   );
 };
