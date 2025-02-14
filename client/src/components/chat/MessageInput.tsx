@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SendHorizontal } from "lucide-react";
+import { SquareCheck } from "lucide-react";
 import { socketClient } from "@/lib/socket";
 
 interface MessageInputProps {
@@ -143,7 +143,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ isBlocked }) => {
         size="icon"
         className="shrink-0"
       >
-        <SendHorizontal className="h-5 w-5" />
+        <SquareCheck className="h-5 w-5" />
       </Button>
     </div>
   );
