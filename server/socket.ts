@@ -69,7 +69,7 @@ export function setupSocketServer(httpServer: HTTPServer) {
         return;
       }
       console.log(
-        `[update_message] User ${socket.id} updating message in room ${currentRoom}`
+        `[update_message] User ${socket.id} updating message in room ${currentRoom} (${message.length} chars)`
       );
       const success = roomManager.updateMessage(socket, currentRoom, message);
       console.log(
